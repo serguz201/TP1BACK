@@ -58,7 +58,11 @@ CONTAINER_TYPES = [
 
 
 async def seed():
-    engine = create_async_engine(settings.DATABASE_URL, echo=False)
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=False,
+        connect_args={"statement_cache_size": 0},
+    )
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with engine.begin() as conn:
