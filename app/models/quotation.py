@@ -16,7 +16,7 @@ class Quotation(Base):
 
     # Input del formulario
     puerto_origen: Mapped[str] = mapped_column(String(100), nullable=False)
-    tipo_contenedor: Mapped[str] = mapped_column(String(50), nullable=False)
+    tipo_contenedor: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     peso_kg: Mapped[float] = mapped_column(Float, nullable=False)
     unidades: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     volumen_cbm: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

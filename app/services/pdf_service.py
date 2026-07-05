@@ -43,9 +43,10 @@ def generate_quotation_pdf(quotation) -> bytes:
     rows = [
         ("Puerto de Origen:", quotation.puerto_origen),
         ("Puerto de Destino:", "Callao (PE)"),
-        ("Tipo de Contenedor:", quotation.tipo_contenedor),
         ("Peso Neto:", f"{quotation.peso_kg:,.0f} kg"),
     ]
+    if quotation.tipo_contenedor:
+        rows.insert(2, ("Tipo de Contenedor:", quotation.tipo_contenedor))
     if quotation.unidades:
         rows.append(("Unidades:", str(quotation.unidades)))
     if quotation.volumen_cbm:

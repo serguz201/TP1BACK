@@ -12,11 +12,12 @@ class SHAPContribution(BaseModel):
 
 class QuotationCreate(BaseModel):
     puerto_origen: str
-    tipo_contenedor: str
     peso_kg: float
     unidades: Optional[int] = None
-    volumen_cbm: Optional[float] = None
     fecha_embarque: Optional[str] = None
+    # Metadatos opcionales (no son features del modelo)
+    tipo_contenedor: Optional[str] = None
+    volumen_cbm: Optional[float] = None
     flete_estimado_usd: float
     ic95_min: float
     ic95_max: float
@@ -34,7 +35,7 @@ class QuotationResponse(BaseModel):
     id: uuid.UUID
     code: str
     puerto_origen: str
-    tipo_contenedor: str
+    tipo_contenedor: Optional[str]
     peso_kg: float
     unidades: Optional[int]
     volumen_cbm: Optional[float]

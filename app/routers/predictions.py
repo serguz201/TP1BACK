@@ -23,6 +23,7 @@ async def estimate_freight(
             unidades=body.unidades,
             volumen_cbm=body.volumen_cbm,
             fecha_embarque=body.fecha_embarque,
+            periodo=body.periodo,
         )
         return result
     except asyncio.TimeoutError:

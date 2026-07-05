@@ -191,46 +191,25 @@ def build_features(
 # PREDICCIÓN PRINCIPAL
 # ──────────────────────────────────────────────────────────────────────────────
 
-def predict(
-    puerto_origen: str,
-    tipo_contenedor: str,
-    peso_kg: float,
-    unidades: Optional[int] = None,
-    volumen_cbm: Optional[float] = None,
-    fecha_embarque: Optional[str] = None,
-) -> dict:
-    """
-    Retorna:
-      - flete_estimado_usd: predicción total en USD
-      - ic95_min / ic95_max: intervalo de confianza 95%
-      - mape_modelo: MAPE conocido del modelo
-      - tiempo_ms: latencia de inferencia
-      - shap_contribuciones: top-3 variables con impacto en negocio
-    """
-    model, explainer = load_model()
-
-    t0 = time.monotonic()
-
-    X = build_features(puerto_origen, tipo_contenedor, peso_kg, unidades, volumen_cbm, fecha_embarque)
-
-    # Predicción de flete unitario (USD/kg), luego multiplicar por peso
+def _predict_one(model, explainer, X: pd.DataFrame, peso_kg: float) -> tuple[float, np.ndarray]:
+    """Predicción individual: retorna (flete_total_usd, shap_usd_array)."""
     flete_unit = float(model.predict(X)[0])
     flete_unit = max(flete_unit, 0.01)  # evitar negativos
     flete_total = flete_unit * peso_kg
 
-    # Intervalo de confianza 95% basado en el MAPE del modelo
+    shap_values = explainer.shap_values(X)
+    shap_row = shap_values[0] if len(shap_values.shape) == 2 else shap_values
+    shap_usd = np.array(shap_row) * peso_kg  # escalar a USD total
+
+    return flete_total, shap_usd
+
+
+def _build_result(flete_total: float, shap_usd: np.ndarray, t0: float) -> dict:
+    """Construye la respuesta final (IC95 + top-3 SHAP) a partir del flete y los SHAP."""
     margen = 1.96 * (MODEL_MAPE / 100) * flete_total
     ic_min = max(flete_total - margen, 0.0)
     ic_max = flete_total + margen
 
-    # SHAP values
-    shap_values = explainer.shap_values(X)
-    shap_row = shap_values[0] if len(shap_values.shape) == 2 else shap_values
-
-    # Escalar SHAP a USD total (multiplicar por peso)
-    shap_usd = np.array(shap_row) * peso_kg
-
-    # Top 3 por valor absoluto
     indices = np.argsort(np.abs(shap_usd))[::-1][:3]
     contribuciones = []
     for idx in indices:
@@ -242,13 +221,65 @@ def predict(
             "direction": "positive" if val >= 0 else "negative",
         })
 
-    tiempo_ms = int((time.monotonic() - t0) * 1000)
-
     return {
         "flete_estimado_usd": round(flete_total, 2),
         "ic95_min": round(ic_min, 2),
         "ic95_max": round(ic_max, 2),
         "mape_modelo": MODEL_MAPE,
-        "tiempo_ms": tiempo_ms,
+        "tiempo_ms": int((time.monotonic() - t0) * 1000),
         "shap_contribuciones": contribuciones,
     }
+
+
+def _resolve_year(fecha_embarque: Optional[str]) -> int:
+    """Extrae el año de la fecha o usa el año actual."""
+    if fecha_embarque:
+        try:
+            return datetime.strptime(fecha_embarque, "%Y-%m-%d").year
+        except ValueError:
+            pass
+    return datetime.now(timezone.utc).year
+
+
+def predict(
+    puerto_origen: str,
+    tipo_contenedor: str,
+    peso_kg: float,
+    unidades: Optional[int] = None,
+    volumen_cbm: Optional[float] = None,
+    fecha_embarque: Optional[str] = None,
+    periodo: Optional[str] = None,
+) -> dict:
+    """
+    Retorna:
+      - flete_estimado_usd: predicción total en USD
+      - ic95_min / ic95_max: intervalo de confianza 95%
+      - mape_modelo: MAPE conocido del modelo
+      - tiempo_ms: latencia de inferencia
+      - shap_contribuciones: top-3 variables con impacto en negocio
+
+    Si periodo == "anual", promedia 12 predicciones (una por mes del año
+    indicado en fecha_embarque) para representar el flete de todo el año.
+    """
+    model, explainer = load_model()
+    t0 = time.monotonic()
+
+    if periodo == "anual":
+        year = _resolve_year(fecha_embarque)
+        totales: list[float] = []
+        shap_acc = np.zeros(len(FEATURE_ORDER))
+        for mes in range(1, 13):
+            X = build_features(
+                puerto_origen, tipo_contenedor, peso_kg, unidades,
+                volumen_cbm, f"{year}-{mes:02d}-15",
+            )
+            ft, su = _predict_one(model, explainer, X, peso_kg)
+            totales.append(ft)
+            shap_acc += su
+        flete_total = sum(totales) / len(totales)
+        shap_usd = shap_acc / 12
+    else:
+        X = build_features(puerto_origen, tipo_contenedor, peso_kg, unidades, volumen_cbm, fecha_embarque)
+        flete_total, shap_usd = _predict_one(model, explainer, X, peso_kg)
+
+    return _build_result(flete_total, shap_usd, t0)
