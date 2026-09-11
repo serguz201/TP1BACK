@@ -3,7 +3,7 @@ Script de seed inicial para JPS Freight Predictor.
 
 Crea las tablas y carga:
   - 3 usuarios (admin, operativo, analista)
-  - 8 puertos de origen asiáticos
+  - 8 puertos de embarque (China y puertos de transbordo)
   - 3 tipos de contenedor
 
 Uso:
@@ -106,7 +106,7 @@ async def seed():
     print("-" * 45)
     print("Credenciales de acceso:")
     for u in USERS:
-        print(f"  {u['role']:12} │ {u['email']:35} │ {u['password']}")
+        print(f"  {u['role']:12} | {u['email']:35} | {u['password']}")
     print("-" * 45)
 
 
