@@ -20,6 +20,12 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
     failed_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    # H-21: version de token. Se firma dentro del JWT y se compara en cada
+    # peticion; cerrar sesion la incrementa e invalida al instante todos los
+    # tokens emitidos antes (incluido el refresh token, que dura 7 dias).
+    token_version: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
     locked_until: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

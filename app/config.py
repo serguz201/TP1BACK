@@ -19,11 +19,16 @@ class Settings(BaseSettings):
     MODEL_PATH: str = "ml/modelo_xgboost_flete.pkl"
     PREDICTION_TIMEOUT_SECONDS: int = 10
 
-    MERCADO_LAG1: float = 0.175
-    MERCADO_LAG2: float = 0.168
-    MERCADO_LAG3: float = 0.172
+    # Los rezagos de mercado ya NO se configuran aquí: ml/market_state.py los
+    # inicializa desde la serie real del artifact (modelo_meta.json) y se
+    # actualizan en caliente vía PATCH /api/maintenance/market-rates.
 
     DESTINATION_PORT: str = "Callao (PE)"
+
+    # Planificador semanal de la ingesta de Aduanet (ml/ingesta_scheduler.py).
+    # Ponerlo en False en todos los workers menos uno si se despliega con
+    # varios: cada proceso arranca su propio bucle y todos barrerian a la vez.
+    INGESTA_SCHEDULER_ENABLED: bool = True
 
     FRONTEND_URL: str = "http://localhost:3000"
     ENVIRONMENT: str = "development"

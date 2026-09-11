@@ -23,6 +23,7 @@ class DashboardKPIs(BaseModel):
     total_cotizaciones: int
     mape_global: float | None
     r2_modelo: float
+    mape_test_modelo: float
     ahorro_promedio_pct: float | None
     cotizaciones_cerradas: int
 

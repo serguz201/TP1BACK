@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -6,6 +7,8 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.prediction import PredictionRequest, PredictionResponse
 from app.services import prediction_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/predictions", tags=["Predicciones"])
 
@@ -24,6 +27,7 @@ async def estimate_freight(
             volumen_cbm=body.volumen_cbm,
             fecha_embarque=body.fecha_embarque,
             periodo=body.periodo,
+            importador=body.importador,
         )
         return result
     except asyncio.TimeoutError:
@@ -31,8 +35,16 @@ async def estimate_freight(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
             detail="El modelo tardó demasiado. Intente de nuevo.",
         )
-    except Exception as exc:
+    except Exception:
+        # H-19: antes se devolvia `str(exc)` al cliente, exponiendo claves de
+        # diccionario, rutas del servidor y errores internos de joblib/XGBoost
+        # —que el frontend ademas pinta tal cual en pantalla—. La traza queda en
+        # el log del servidor; el usuario recibe un mensaje accionable.
+        logger.exception("Fallo la prediccion.")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en el modelo predictivo: {str(exc)}",
+            detail=(
+                "El servicio de pronóstico no está disponible en este momento. "
+                "Intente de nuevo; si persiste, avise al administrador."
+            ),
         )

@@ -1,9 +1,39 @@
 """Genera PDF de cotización con fpdf2."""
 
-from io import BytesIO
-from datetime import datetime, timezone
+import unicodedata
 
 from fpdf import FPDF
+
+# Las fuentes "core" de fpdf2 (Helvetica y compañía) solo admiten latin-1.
+#
+# H-17. `multi_cell()` con el comentario del usuario reventaba con cualquier
+# carácter fuera de ese juego —un emoji, el símbolo del euro— y devolvía un 500
+# en la descarga del PDF. El campo de comentarios de la UI acepta 500 caracteres
+# libres, así que llegar ahí es trivial: se reprodujo con "Carga urgente 🚢 —
+# coste 100€". Incrustar una fuente TTF Unicode obligaría a distribuir el
+# fichero de fuente con el backend; se opta por transliterar, que conserva el
+# texto legible y no añade dependencias de despliegue.
+_SUSTITUCIONES = {
+    "€": "EUR", "—": "-", "–": "-", "“": '"', "”": '"',
+    "‘": "'", "’": "'", "…": "...", "•": "-", "→": "->", "±": "+/-",
+}
+
+
+def _latin1(texto) -> str:
+    """Devuelve `texto` representable en latin-1, sin perder legibilidad."""
+    if texto is None:
+        return ""
+    s = str(texto)
+    for orig, sust in _SUSTITUCIONES.items():
+        s = s.replace(orig, sust)
+    try:
+        s.encode("latin-1")
+        return s
+    except UnicodeEncodeError:
+        # Se descomponen los acentos y se descarta lo que no tenga equivalente
+        # (emoji, ideogramas). Nunca lanza.
+        normal = unicodedata.normalize("NFKD", s)
+        return normal.encode("latin-1", "ignore").decode("latin-1")
 
 
 def generate_quotation_pdf(quotation) -> bytes:
@@ -25,7 +55,7 @@ def generate_quotation_pdf(quotation) -> bytes:
     pdf.set_y(48)
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Helvetica", "B", 12)
-    pdf.cell(95, 8, f"Cotizacion: {quotation.code}", ln=False)
+    pdf.cell(95, 8, _latin1(f"Cotizacion: {quotation.code}"), ln=False)
     fecha = quotation.created_at.strftime("%d/%m/%Y %H:%M")
     pdf.cell(95, 8, f"Fecha: {fecha}", align="R", ln=True)
     pdf.ln(2)
@@ -41,12 +71,14 @@ def generate_quotation_pdf(quotation) -> bytes:
 
     pdf.set_font("Helvetica", "", 10)
     rows = [
-        ("Puerto de Origen:", quotation.puerto_origen),
+        ("Puerto de Embarque:", quotation.puerto_origen),
         ("Puerto de Destino:", "Callao (PE)"),
         ("Peso Neto:", f"{quotation.peso_kg:,.0f} kg"),
     ]
+    if quotation.importador:
+        rows.insert(1, ("Importador:", quotation.importador))
     if quotation.tipo_contenedor:
-        rows.insert(2, ("Tipo de Contenedor:", quotation.tipo_contenedor))
+        rows.append(("Tipo de Contenedor:", quotation.tipo_contenedor))
     if quotation.unidades:
         rows.append(("Unidades:", str(quotation.unidades)))
     if quotation.volumen_cbm:
@@ -56,9 +88,9 @@ def generate_quotation_pdf(quotation) -> bytes:
 
     for label, value in rows:
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(60, 7, label)
+        pdf.cell(60, 7, _latin1(label))
         pdf.set_font("Helvetica", "", 10)
-        pdf.cell(0, 7, value, ln=True)
+        pdf.cell(0, 7, _latin1(value), ln=True)
 
     pdf.ln(4)
 
@@ -83,8 +115,40 @@ def generate_quotation_pdf(quotation) -> bytes:
         f"Intervalo de confianza 95%: USD {quotation.ic95_min:,.2f} - USD {quotation.ic95_max:,.2f}",
         align="C", ln=True,
     )
+    # H-18: el PDF omitia `mape_regimen` y `mape_modelo`, pese a que la
+    # migracion 004 se anadio precisamente para que "una cotizacion guardada o
+    # SU PDF" pudieran decir si la estimacion se apoyo en mercado observado o
+    # congelado. El cliente recibia un intervalo sin saber que el error esperado
+    # de esa cotizacion era ~27.5% y no el 22.2% de referencia.
+    _extrapolada = (quotation.mape_regimen or "").lower() == "extrapolado"
+    if quotation.mape_regimen:
+        pdf.cell(
+            0, 5,
+            _latin1(
+                f"Regimen: {'mercado proyectado' if _extrapolada else 'mercado observado'}"
+                f"  ·  error esperado del modelo: +/-{quotation.mape_modelo:.1f}%"
+            ),
+            align="C", ln=True,
+        )
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
+
+    if _extrapolada:
+        pdf.set_fill_color(255, 247, 224)
+        pdf.set_draw_color(245, 200, 120)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.multi_cell(
+            0, 5,
+            _latin1(
+                "AVISO: la fecha de embarque solicitada cae fuera del periodo de "
+                "mercado que el modelo observo al entrenarse. La estimacion se "
+                "calcula con el ultimo mercado conocido, y su error esperado "
+                f"(+/-{quotation.mape_modelo:.1f}%) es mayor que el medido dentro "
+                "del historico. Uselo como referencia orientativa."
+            ),
+            border=1, fill=True, align="L",
+        )
+        pdf.ln(3)
 
     # ── Comentario ────────────────────────────────────────────────────────────
     if quotation.comentario:
@@ -93,7 +157,7 @@ def generate_quotation_pdf(quotation) -> bytes:
         pdf.cell(0, 8, "  Comentarios", fill=True, ln=True)
         pdf.ln(2)
         pdf.set_font("Helvetica", "", 10)
-        pdf.multi_cell(0, 6, quotation.comentario)
+        pdf.multi_cell(0, 6, _latin1(quotation.comentario))
         pdf.ln(4)
 
     # ── Pie de página ─────────────────────────────────────────────────────────

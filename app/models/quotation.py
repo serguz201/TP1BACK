@@ -16,6 +16,7 @@ class Quotation(Base):
 
     # Input del formulario
     puerto_origen: Mapped[str] = mapped_column(String(100), nullable=False)
+    importador: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     tipo_contenedor: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     peso_kg: Mapped[float] = mapped_column(Float, nullable=False)
     unidades: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -28,6 +29,13 @@ class Quotation(Base):
     ic95_min: Mapped[float] = mapped_column(Float, nullable=False)
     ic95_max: Mapped[float] = mapped_column(Float, nullable=False)
     mape_modelo: Mapped[float] = mapped_column(Float, nullable=False)
+    # Regimen en que se sirvio la prediccion: 'historico' | 'extrapolado'.
+    # TERCERA AUDITORIA: se guardaba `mape_modelo` (que puede ser 22.2 o 27.5)
+    # sin decir a cual de los dos regimenes correspondia, asi que una cotizacion
+    # guardada o su PDF no permitian saber si la estimacion se apoyaba en
+    # mercado observado o congelado. Nullable por compatibilidad con las filas
+    # anteriores a la migracion 004.
+    mape_regimen: Mapped[str | None] = mapped_column(String(20), nullable=True)
     tiempo_ms: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # SHAP top 3 variables (JSON)

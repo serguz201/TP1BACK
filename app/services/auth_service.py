@@ -1,7 +1,8 @@
+import asyncio
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import (
@@ -14,6 +15,7 @@ from app.models.audit_log import AuditLog
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 from app.schemas.auth import LoginResponse, UserInToken
+from app.services import audit_service, email_service
 
 MAX_FAILED_ATTEMPTS = 5
 LOCK_DURATION_MINUTES = 15
@@ -59,7 +61,11 @@ async def authenticate_user(
     )
     await db.commit()
 
-    token_data = {"sub": str(user.id), "role": user.role}
+    token_data = {
+        "sub": str(user.id),
+        "role": user.role,
+        "tv": int(user.token_version or 0),  # H-21
+    }
     return LoginResponse(
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),
@@ -95,10 +101,27 @@ async def _record_failed_attempt(db: AsyncSession, user: User, ip: str) -> None:
 
 
 async def request_password_reset(db: AsyncSession, email: str) -> str | None:
+    """Emite un token de reset, invalida los anteriores y envia el correo.
+
+    H-10: antes el token se generaba y se guardaba, pero nadie lo enviaba.
+    H-20: cada llamada anadia un token nuevo sin caducar los anteriores, asi que
+    15 peticiones dejaban 15 tokens simultaneamente validos. Ahora emitir uno
+    marca como usados todos los que ese usuario tuviera vivos.
+    """
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if not user or user.status != "active":
         return None
+
+    # H-20: un token nuevo invalida los anteriores del mismo usuario.
+    await db.execute(
+        update(PasswordResetToken)
+        .where(
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.used == False,  # noqa: E712
+        )
+        .values(used=True)
+    )
 
     token = secrets.token_urlsafe(32)
     expires = datetime.now(timezone.utc) + timedelta(
@@ -108,6 +131,20 @@ async def request_password_reset(db: AsyncSession, email: str) -> str | None:
         PasswordResetToken(user_id=user.id, token=token, expires_at=expires)
     )
     await db.commit()
+
+    # El envio bloquea (smtplib es sincrono), asi que va a un hilo. Su resultado
+    # no altera la respuesta del endpoint: debe ser identica exista o no el
+    # correo (HU-02).
+    enviado = await asyncio.to_thread(
+        email_service.enviar_reset_password,
+        user.email, user.name, token, RESET_TOKEN_EXPIRE_MINUTES,
+    )
+    # H-14: el restablecimiento de contrasena es una operacion privilegiada y no
+    # dejaba rastro. Se registra la SOLICITUD (no el token).
+    await audit_service.registrar(
+        "password_reset_solicitado", user_id=user.id, entity="user",
+        entity_id=str(user.id), details={"correo_enviado": enviado},
+    )
     return token
 
 
@@ -138,4 +175,8 @@ async def reset_password(
     user.updated_at = datetime.now(timezone.utc)
     reset_token.used = True
     await db.commit()
+    await audit_service.registrar(
+        "password_restablecida", user_id=user.id, entity="user",
+        entity_id=str(user.id),
+    )
     return True

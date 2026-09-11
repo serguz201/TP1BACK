@@ -2,7 +2,7 @@
 
 import math
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 from typing import Optional
 
 from sqlalchemy import select, func, desc
@@ -12,6 +12,7 @@ from app.models.audit_log import AuditLog
 from app.models.quotation import Quotation
 from app.models.user import User
 from app.schemas.quotation import QuotationCreate
+from app.services import prediction_service
 
 
 def _generate_code() -> str:
@@ -26,31 +27,45 @@ async def create_quotation(
     usuario_id: Optional[uuid.UUID],
     usuario_nombre: Optional[str],
 ) -> Quotation:
-    shap_list = (
-        [c.model_dump() for c in data.shap_contribuciones]
-        if data.shap_contribuciones
-        else None
-    )
-    flete_unitario = (
-        round(data.flete_estimado_usd / data.peso_kg, 6)
-        if data.peso_kg > 0
-        else None
-    )
-    q = Quotation(
-        code=_generate_code(),
+    """Ejecuta el modelo y persiste SU resultado, no el que mande el cliente.
+
+    H-04. El cuerpo de la peticion ya solo trae los inputs del formulario. La
+    estimacion se recalcula aqui con `ml.predictor.predict()`, de modo que una
+    cotizacion guardada es siempre prueba de lo que el modelo dijo para esos
+    inputs. Es tambien la razon por la que se guarda `periodo`: sin el, una
+    cotizacion anual no seria reproducible.
+    """
+    prediccion = await prediction_service.estimate(
         puerto_origen=data.puerto_origen,
         tipo_contenedor=data.tipo_contenedor,
         peso_kg=data.peso_kg,
         unidades=data.unidades,
         volumen_cbm=data.volumen_cbm,
         fecha_embarque=data.fecha_embarque,
-        flete_estimado_usd=data.flete_estimado_usd,
+        periodo=data.periodo,
+        importador=data.importador,
+    )
+
+    flete_estimado = prediccion["flete_estimado_usd"]
+    flete_unitario = round(flete_estimado / data.peso_kg, 6) if data.peso_kg > 0 else None
+
+    q = Quotation(
+        code=_generate_code(),
+        puerto_origen=data.puerto_origen,
+        importador=data.importador,
+        tipo_contenedor=data.tipo_contenedor,
+        peso_kg=data.peso_kg,
+        unidades=data.unidades,
+        volumen_cbm=data.volumen_cbm,
+        fecha_embarque=data.fecha_embarque,
+        flete_estimado_usd=flete_estimado,
         flete_unitario_usd=flete_unitario,
-        ic95_min=data.ic95_min,
-        ic95_max=data.ic95_max,
-        mape_modelo=data.mape_modelo,
-        tiempo_ms=data.tiempo_ms,
-        shap_contribuciones=shap_list,
+        ic95_min=prediccion["ic95_min"],
+        ic95_max=prediccion["ic95_max"],
+        mape_modelo=prediccion["mape_modelo"],
+        mape_regimen=prediccion.get("mape_regimen"),
+        tiempo_ms=prediccion["tiempo_ms"],
+        shap_contribuciones=prediccion.get("shap_contribuciones"),
         comentario=data.comentario,
         usuario_id=usuario_id,
         usuario_nombre=usuario_nombre,
@@ -62,7 +77,7 @@ async def create_quotation(
         action="cotizacion_creada",
         entity="quotation",
         entity_id=str(q.id),
-        details={"code": q.code, "flete_estimado_usd": data.flete_estimado_usd},
+        details={"code": q.code, "flete_estimado_usd": flete_estimado},
     ))
     await db.commit()
     await db.refresh(q)
@@ -76,8 +91,8 @@ async def list_quotations(
     page_size: int = 10,
     search: Optional[str] = None,
     origen: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
     estado: Optional[str] = None,
     usuario_id: Optional[uuid.UUID] = None,
 ) -> tuple[list[Quotation], int]:
@@ -95,10 +110,18 @@ async def list_quotations(
         stmt = stmt.where(Quotation.code.ilike(f"%{search}%"))
     if origen and origen != "All":
         stmt = stmt.where(Quotation.puerto_origen == origen)
+    # H-16: las fechas llegan ya validadas por Pydantic como `date`; se
+    # convierten a instantes UTC para comparar contra un TIMESTAMPTZ.
     if date_from:
-        stmt = stmt.where(Quotation.created_at >= datetime.fromisoformat(date_from))
+        stmt = stmt.where(
+            Quotation.created_at
+            >= datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+        )
     if date_to:
-        stmt = stmt.where(Quotation.created_at <= datetime.fromisoformat(date_to + "T23:59:59"))
+        stmt = stmt.where(
+            Quotation.created_at
+            <= datetime.combine(date_to, time.max, tzinfo=timezone.utc)
+        )
     if estado:
         stmt = stmt.where(Quotation.estado == estado)
 

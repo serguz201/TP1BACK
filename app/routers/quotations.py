@@ -1,5 +1,7 @@
+import asyncio
 import math
 import uuid
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -25,9 +27,20 @@ async def create_quotation(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    q = await quotation_service.create_quotation(
-        db, body, current_user.id, current_user.name
-    )
+    """Recalcula la estimacion con el modelo y guarda SU resultado (H-04).
+
+    El cuerpo solo lleva los inputs del formulario; el importe, el intervalo, el
+    MAPE y los SHAP los produce el servidor.
+    """
+    try:
+        q = await quotation_service.create_quotation(
+            db, body, current_user.id, current_user.name
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="El modelo tardó demasiado. Intente de nuevo.",
+        )
     return q
 
 
@@ -37,8 +50,13 @@ async def list_quotations(
     page_size: int = Query(10, ge=1, le=100),
     search: Optional[str] = None,
     origen: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
+    # H-16: eran `str` y se parseaban con `datetime.fromisoformat()` dentro del
+    # servicio, asi que `?date_from=NO-ES-FECHA` lanzaba ValueError y salia por
+    # el manejador global como 500. Tipandolos como `date`, Pydantic devuelve un
+    # 422 con el campo y el motivo, que es lo que corresponde a una entrada mal
+    # formada del cliente.
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
     estado: Optional[str] = None,
     usuario_id: Optional[uuid.UUID] = None,
     db: AsyncSession = Depends(get_db),
@@ -65,6 +83,16 @@ async def get_quotation(
     q = await quotation_service.get_quotation(db, quotation_id)
     if not q:
         raise HTTPException(status_code=404, detail="Cotización no encontrada.")
+
+    # H-05: el listado ya filtraba al rol operativo a sus propias cotizaciones y
+    # el endpoint de PDF ya validaba la propiedad, pero este no: un operador
+    # podia leer integra la cotizacion de cualquier otro (importador, precio
+    # ofertado, comentario comercial) conociendo su UUID. Misma regla que en
+    # download_pdf.
+    if current_user.role == "operativo" and q.usuario_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="No tiene permiso para ver esta cotización."
+        )
     return q
 
 

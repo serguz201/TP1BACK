@@ -7,6 +7,11 @@ class PortCatalogResponse(BaseModel):
     name: str
 
 
+class ImportadorCatalogResponse(BaseModel):
+    key: str
+    name: str
+
+
 class ContainerTypeResponse(BaseModel):
     id: uuid.UUID
     code: str

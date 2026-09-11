@@ -18,6 +18,7 @@ async def estimate(
     volumen_cbm: Optional[float],
     fecha_embarque: Optional[str],
     periodo: Optional[str] = None,
+    importador: Optional[str] = None,
 ) -> dict:
     """Ejecuta la predicción ML en un thread pool para no bloquear el event loop."""
     loop = asyncio.get_running_loop()
@@ -33,6 +34,7 @@ async def estimate(
             volumen_cbm,
             fecha_embarque,
             periodo,
+            importador,
         ),
         timeout=settings.PREDICTION_TIMEOUT_SECONDS,
     )
@@ -47,5 +49,6 @@ def _run_predict(
     volumen_cbm: Optional[float],
     fecha_embarque: Optional[str],
     periodo: Optional[str],
+    importador: Optional[str] = None,
 ) -> dict:
-    return predict(puerto_origen, tipo_contenedor, peso_kg, unidades, volumen_cbm, fecha_embarque, periodo)
+    return predict(puerto_origen, tipo_contenedor, peso_kg, unidades, volumen_cbm, fecha_embarque, periodo, importador)

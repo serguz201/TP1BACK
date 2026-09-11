@@ -44,6 +44,13 @@ async def get_current_user(
 
     if user is None or user.status != "active":
         raise exc
+
+    # H-21: revocacion server-side. Un token emitido antes del ultimo logout
+    # (o del ultimo cambio forzado de version) deja de ser valido. Los tokens
+    # anteriores a la migracion 005 no llevan `tv` y se tratan como version 0,
+    # de modo que desplegar el cambio no desloguea a nadie.
+    if int(payload.get("tv", 0)) != int(user.token_version or 0):
+        raise exc
     return user
 
 
