@@ -1,0 +1,847 @@
+{
+  "partidas": [
+    "4011101000"
+  ],
+  "aduana": "118",
+  "ventana_dias": 120,
+  "pausa_segundos": 1.0,
+  "min_declaraciones_mes": 50,
+  "programacion": {
+    "activa": true,
+    "dia_semana": 6,
+    "hora": 3,
+    "aplicar_automaticamente": true
+  },
+  "importadores": [
+    {
+      "ruc": "20611096471",
+      "nombre": "\"GRUPO IAL E.I.R.L.\"",
+      "activo": true
+    },
+    {
+      "ruc": "20566524938",
+      "nombre": "A & M CARS SERVICE S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20521731673",
+      "nombre": "A.R.S ASESORES COMERCIO  EXTERIOR SOCIED",
+      "activo": true
+    },
+    {
+      "ruc": "20605615008",
+      "nombre": "ALCAPIAB E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20100025915",
+      "nombre": "ALFREDO PIMENTEL SEVILLA S A",
+      "activo": true
+    },
+    {
+      "ruc": "20601497931",
+      "nombre": "ALMARO WHEELS PERU EMPRESA INDIVIDUAL DE",
+      "activo": true
+    },
+    {
+      "ruc": "20296136728",
+      "nombre": "ALTOS ANDES S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20550856337",
+      "nombre": "ALVILLANTAS EMPRESA INDIVIDUAL DE RESPON",
+      "activo": true
+    },
+    {
+      "ruc": "20610340840",
+      "nombre": "ANQUAN GEAR FCO S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20556048518",
+      "nombre": "AROMOTOR SOCIEDAD ANONIMA CERRADA",
+      "activo": true
+    },
+    {
+      "ruc": "20502911385",
+      "nombre": "ATLAS LLANTAS IMPORTACIONES SAC",
+      "activo": true
+    },
+    {
+      "ruc": "20606598115",
+      "nombre": "AUTOPARTES Y REPUESTOS C.H S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20549272585",
+      "nombre": "AUTOPOS S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20603359497",
+      "nombre": "AUTOSGAS GMD S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20523557026",
+      "nombre": "AVC COMERCIAL SOCIEDAD ANONIMA CERRADA -",
+      "activo": true
+    },
+    {
+      "ruc": "20524088810",
+      "nombre": "AVIVEL SAC",
+      "activo": true
+    },
+    {
+      "ruc": "20602385338",
+      "nombre": "BATERIAS DEL NORTE E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20608969323",
+      "nombre": "BEA BUSINESS S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20610305572",
+      "nombre": "BERRIOS COMPANY S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20606170409",
+      "nombre": "BLACK 4 X 4 LLANTAS E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20601261716",
+      "nombre": "BRAVO RIOFRIO BRIO S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20613511068",
+      "nombre": "CAPITAN IMPORTACIONES E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20613581554",
+      "nombre": "CAR SPORTS S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20611635665",
+      "nombre": "CASA HUAN QIU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20101130160",
+      "nombre": "CASOLI S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20549521984",
+      "nombre": "CATUSITA TIRE GROUP S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20109072177",
+      "nombre": "CENCOSUD RETAIL PERU S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20605171941",
+      "nombre": "CHINA ROAD AND BRIDGE CORPORATION SUCURS",
+      "activo": true
+    },
+    {
+      "ruc": "20608010654",
+      "nombre": "COMERCIAL & IMPORT TIRE E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20611323647",
+      "nombre": "COMERCIAL SAGUITARIUS IMPORT E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20601744849",
+      "nombre": "COMERCIAL VICTORIA L&A S.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20606219165",
+      "nombre": "COMERCIAL YUAN DA 168 S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20258505213",
+      "nombre": "COMERCIO & CIA S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20100012856",
+      "nombre": "COMPAÑIA GOODYEAR DEL PERU S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20481918783",
+      "nombre": "CONSORCIO MADERERO SAN FERNANDO SAC",
+      "activo": true
+    },
+    {
+      "ruc": "20602806686",
+      "nombre": "CORPORACION APILUMA S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20462604735",
+      "nombre": "CORPORACION GTM DEL PERU S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20608482084",
+      "nombre": "CORPORACION RODRIVAL HUAMACHUCO E.I.R.L",
+      "activo": true
+    },
+    {
+      "ruc": "20601863465",
+      "nombre": "CORPORACION YAAN S.A.C.-YAAN S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20601672198",
+      "nombre": "CORPORACIÓN HEYZA E.I.R.L",
+      "activo": true
+    },
+    {
+      "ruc": "20600633571",
+      "nombre": "CYCLONE PERU S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20344877158",
+      "nombre": "DERCO PERU S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20605867414",
+      "nombre": "DMT FUXUAN S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20606465883",
+      "nombre": "DROGUERIA & HEALT EQUIPEMENT SOCIEDAD AN",
+      "activo": true
+    },
+    {
+      "ruc": "20600594398",
+      "nombre": "E & E TIRE'S IMPORT SRL",
+      "activo": true
+    },
+    {
+      "ruc": "20546850502",
+      "nombre": "E & V NEUMATICOS SOCIEDAD COMERCIAL DE R",
+      "activo": true
+    },
+    {
+      "ruc": "20607273261",
+      "nombre": "E&D INNOVA TYRE S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20565482387",
+      "nombre": "EDICAR AUTOS E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20600778286",
+      "nombre": "EMOTION GROUP PERU SOCIEDAD ANONIMA CERR",
+      "activo": true
+    },
+    {
+      "ruc": "20602526314",
+      "nombre": "EMPRESA DE SERVICIOS GENERALES MEGALLANT",
+      "activo": true
+    },
+    {
+      "ruc": "20609851831",
+      "nombre": "EONCRED GROUP S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20612507083",
+      "nombre": "EQUIPAMIENTO LOS ANDES S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20505224401",
+      "nombre": "EUROTIRE S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20601858020",
+      "nombre": "EVAS 1 E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20603186126",
+      "nombre": "FEINPE E.I.R.L",
+      "activo": true
+    },
+    {
+      "ruc": "20601584205",
+      "nombre": "GARCIA RALLY TEAM S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20464428730",
+      "nombre": "GLOBAL TIRES PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20566339103",
+      "nombre": "GNV RUIZ S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20607299197",
+      "nombre": "GOLDEN LLANTAS S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20602119531",
+      "nombre": "GOODRIDE DEL PERU S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20566296293",
+      "nombre": "GRUPO & GUIZADO MOTORS S.A.C. - G & G MO",
+      "activo": true
+    },
+    {
+      "ruc": "20601285569",
+      "nombre": "GRUPO IAP SOCIEDAD ANONIMA CERRADA - GRU",
+      "activo": true
+    },
+    {
+      "ruc": "20613858211",
+      "nombre": "GRUPO IMPORT LOGISTICA PERU SOCIEDAD ANO",
+      "activo": true
+    },
+    {
+      "ruc": "20600234227",
+      "nombre": "GRUPO JL LLANTAS EMPRESA INDIVIDUAL DE R",
+      "activo": true
+    },
+    {
+      "ruc": "20502407385",
+      "nombre": "GRUPO LODI SRL",
+      "activo": true
+    },
+    {
+      "ruc": "20603887302",
+      "nombre": "GRUPO NOBLEZA INTERCONTINENTAL EMPRESA I",
+      "activo": true
+    },
+    {
+      "ruc": "20607597929",
+      "nombre": "HAIDA INVERSIONES E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20610357726",
+      "nombre": "HARRASO TRANSPORT S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20610878912",
+      "nombre": "HCW PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20522199495",
+      "nombre": "HOUSEMART PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20610452559",
+      "nombre": "HUGO LOPEZ INTERNATIONAL GENERAL TRADING",
+      "activo": true
+    },
+    {
+      "ruc": "20607041041",
+      "nombre": "HUVE TIRES SOCIEDAD ANÓNIMA CERRADA",
+      "activo": true
+    },
+    {
+      "ruc": "20601840902",
+      "nombre": "IMPORT GLOBAL SILENCIADORES PERCA TRUCK",
+      "activo": true
+    },
+    {
+      "ruc": "20611591005",
+      "nombre": "IMPORT JANFEX S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20606671785",
+      "nombre": "IMPORT TIRES MORE E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20606539909",
+      "nombre": "IMPORTACIONES BARBOZA TIRE S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20568757603",
+      "nombre": "IMPORTACIONES GENERALES MARCEL S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20604117292",
+      "nombre": "IMPORTACIONES JORDANO E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20495764398",
+      "nombre": "IMPORTACIONES RAMIREZ E.I.R.L",
+      "activo": true
+    },
+    {
+      "ruc": "20517547434",
+      "nombre": "IMPORTACIONES Y EXPORTACIONES FACIL CAR",
+      "activo": true
+    },
+    {
+      "ruc": "20551933041",
+      "nombre": "IMPORTADORA ROMAX S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20380130336",
+      "nombre": "INCHCAPE MOTORS PERU SA",
+      "activo": true
+    },
+    {
+      "ruc": "20607689505",
+      "nombre": "INDUCAR IMPORT S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20611625716",
+      "nombre": "INKA TEGNOLOGY S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20601052432",
+      "nombre": "INTERCONEXIONES OCANEY E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20606199172",
+      "nombre": "INTERNATIONAL CONSUMABLES AND INDUSTRIAL",
+      "activo": true
+    },
+    {
+      "ruc": "20568740620",
+      "nombre": "INVERSIONES BRISAS BAND E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20611491191",
+      "nombre": "INVERSIONES CASTILLO REYES S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20609099764",
+      "nombre": "INVERSIONES CUSIHUAMAN A & L SOCIEDAD AN",
+      "activo": true
+    },
+    {
+      "ruc": "20600033329",
+      "nombre": "INVERSIONES DUNAMIS & SHALOM S.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20550220891",
+      "nombre": "INVERSIONES JASOWI S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20505592035",
+      "nombre": "INVERSIONES SERVICAR S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20522743110",
+      "nombre": "INVERSIONES STEEL INDUSTRIA E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20318171701",
+      "nombre": "J.CH.COMERCIAL S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20393652510",
+      "nombre": "J.L.G CENTRO DIESEL  E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20446389328",
+      "nombre": "JOSACO E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20602751326",
+      "nombre": "KIKAI & SABISU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20560154004",
+      "nombre": "KIMSA INRETAIL E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20455465606",
+      "nombre": "KOREA AUTOPART'S DEL PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20603590687",
+      "nombre": "LA CASA DEL NEUMATICO EMPRESA INDIVIDUAL",
+      "activo": true
+    },
+    {
+      "ruc": "20607040941",
+      "nombre": "LAREDO CAPITAL S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20546626882",
+      "nombre": "LATINOAMERICA DE NEGOCIOS DEL PERU S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20558357721",
+      "nombre": "LEVANTE PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20564334732",
+      "nombre": "LLANKASUN E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20492565319",
+      "nombre": "LLANMAXXI DEL PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20381499627",
+      "nombre": "LLANTA SAN MARTIN S.R.LTDA.",
+      "activo": true
+    },
+    {
+      "ruc": "20450733785",
+      "nombre": "LLANTACENTRO EL PUMITA S.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20480934262",
+      "nombre": "LLANTAS IMPORT WIDO E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20604462089",
+      "nombre": "LONNI INVERSIONES S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20609551896",
+      "nombre": "LOS SUPER DRAGONES S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20603230052",
+      "nombre": "LUCAS BLANDFORD PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20559109101",
+      "nombre": "LUMAXSA SOCIEDAD ANONIMA CERRADA",
+      "activo": true
+    },
+    {
+      "ruc": "20551261272",
+      "nombre": "M & A  TIRE SOCIEDAD ANONIMA CERRADA",
+      "activo": true
+    },
+    {
+      "ruc": "20603011601",
+      "nombre": "M & S TIRES IMPORT EMPRESA INDIVIDUAL DE",
+      "activo": true
+    },
+    {
+      "ruc": "20610743464",
+      "nombre": "MAXTIRE SOCIEDAD ANONIMA CERRADA",
+      "activo": true
+    },
+    {
+      "ruc": "20611714328",
+      "nombre": "MCKAY S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20557347632",
+      "nombre": "MEGA SERVICE A & M S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20422626175",
+      "nombre": "MICHELIN DEL PERU S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20543265056",
+      "nombre": "MOTORED SOCIEDAD ANONIMA  - MOTORED S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20611815337",
+      "nombre": "MOTORYSA PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20612066605",
+      "nombre": "MOTOTIRE PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20537874105",
+      "nombre": "MULTILLANTAS CAMI E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20611067250",
+      "nombre": "MULTISERVICIOS AVENTURA S.A",
+      "activo": true
+    },
+    {
+      "ruc": "20542506572",
+      "nombre": "MULTISERVICIOS GENERALES D & D SOCIEDAD",
+      "activo": true
+    },
+    {
+      "ruc": "20481519901",
+      "nombre": "MULTISERVICIOS GENERALES NEXXUS SAC",
+      "activo": true
+    },
+    {
+      "ruc": "20601329272",
+      "nombre": "MUNDOPLAS SOCIEDAD ANONIMA - MUNDOPLAS S",
+      "activo": true
+    },
+    {
+      "ruc": "20611897775",
+      "nombre": "NC UNITED GROUP E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20611446307",
+      "nombre": "NEUMA PERU COMPANY S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20486766183",
+      "nombre": "NEUMATICOS ALVINO EMPRESA INDIVIDUAL DE",
+      "activo": true
+    },
+    {
+      "ruc": "20479597139",
+      "nombre": "NEUMATICOS CHICLAYO EIRL",
+      "activo": true
+    },
+    {
+      "ruc": "20609679370",
+      "nombre": "NK GLOBAL TRADE S.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20609731029",
+      "nombre": "NUVOF COMERCIAL DEL PERU E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20100084768",
+      "nombre": "PEVISA AUTO PARTS S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20604901465",
+      "nombre": "PGS INVERSIONES S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20513077123",
+      "nombre": "PIELES Y CUEROS PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20601571570",
+      "nombre": "PREMIUN TIRE S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20167930868",
+      "nombre": "PTS S.A",
+      "activo": true
+    },
+    {
+      "ruc": "20602760929",
+      "nombre": "R Y M SINOTRUK IMPORT S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20614582651",
+      "nombre": "RACE ON WHEELS PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20538517624",
+      "nombre": "RALLY AUTO SPORT S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20512960287",
+      "nombre": "REENCAUCHADORA BRADAR S.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20100359708",
+      "nombre": "RENOVA S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20600133340",
+      "nombre": "REPRESENTACIONES FENIX RETAIL E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20612110892",
+      "nombre": "RM TYRES S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20601398550",
+      "nombre": "ROMA IMPORT E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20522120902",
+      "nombre": "ROSYMAR PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20429350264",
+      "nombre": "SERVOSA CARGO S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20606363762",
+      "nombre": "SHILI GROUP S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20297970489",
+      "nombre": "STEELS ASOCIADOS S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20574716200",
+      "nombre": "SUDAMERICA RACING S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20612444103",
+      "nombre": "TECNILLANTAS ANDRADE E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20112273922",
+      "nombre": "TIENDAS DEL MEJORAMIENTO DEL HOGAR S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20140441083",
+      "nombre": "TIRE SOL S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20607454001",
+      "nombre": "TIRES ACCESSORIES PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20481058407",
+      "nombre": "TRANSPORTES E INVERSIONES CATE SAC",
+      "activo": true
+    },
+    {
+      "ruc": "20603071001",
+      "nombre": "TRANSPORTES Y SERVICIOS DE CARGA VIRGEN",
+      "activo": true
+    },
+    {
+      "ruc": "20254009254",
+      "nombre": "TRICORZO S.A.",
+      "activo": true
+    },
+    {
+      "ruc": "20612719030",
+      "nombre": "UMALLIQ E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20548970068",
+      "nombre": "UNIDOS PERU & CIA  E.I.R.L.",
+      "activo": true
+    },
+    {
+      "ruc": "20544076451",
+      "nombre": "UNION CAR'S S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20106472310",
+      "nombre": "VANGUARDIA AUTOMOTRIZ S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20543595358",
+      "nombre": "VEPSA TRANSPORTES S.A.C",
+      "activo": true
+    },
+    {
+      "ruc": "20608774212",
+      "nombre": "W & Z IMPORT S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20602131620",
+      "nombre": "YUANXING PERU S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20610475524",
+      "nombre": "ZEHLENDORF CORP S.A.C.",
+      "activo": true
+    },
+    {
+      "ruc": "20506634858",
+      "nombre": "ZONA LLANTAS S.A.C.",
+      "activo": true
+    }
+  ]
+}

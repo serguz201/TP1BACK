@@ -1,0 +1,97 @@
+{
+  "ultima_ejecucion": "2026-09-08T03:51:39+00:00",
+  "ultimo_resultado": {
+    "inicio": "2026-09-08T03:48:17+00:00",
+    "fin": "2026-09-08T03:51:39+00:00",
+    "duracion_s": 202.0,
+    "desde": "2026-05-10",
+    "hasta": "2026-09-07",
+    "importadores_consultados": 166,
+    "partidas": [
+      "4011101000"
+    ],
+    "declaraciones_descargadas": 734,
+    "declaraciones_nuevas": 719,
+    "declaraciones_acumuladas": 734,
+    "errores": [],
+    "n_errores": 0,
+    "serie_mensual": [
+      {
+        "mes": "2026-05",
+        "flete_unit": 0.24124164795923178,
+        "declaraciones": 141
+      },
+      {
+        "mes": "2026-06",
+        "flete_unit": 0.2455647812485337,
+        "declaraciones": 199
+      },
+      {
+        "mes": "2026-07",
+        "flete_unit": 0.366417158066257,
+        "declaraciones": 176
+      },
+      {
+        "mes": "2026-08",
+        "flete_unit": 0.4393283201701657,
+        "declaraciones": 177
+      },
+      {
+        "mes": "2026-09",
+        "flete_unit": 0.3930908425598825,
+        "declaraciones": 33
+      }
+    ],
+    "rezagos": {
+      "ok": true,
+      "lag1": 0.439328,
+      "lag2": 0.366417,
+      "lag3": 0.245565,
+      "vigente_hasta": "2026-08",
+      "meses": [
+        "2026-08",
+        "2026-07",
+        "2026-06"
+      ],
+      "declaraciones_por_mes": {
+        "2026-08": 177,
+        "2026-07": 176,
+        "2026-06": 199
+      }
+    },
+    "aplicado": true,
+    "motivo_no_aplicado": null,
+    "estado_mercado": {
+      "lag1": 0.439328,
+      "lag2": 0.366417,
+      "lag3": 0.245565,
+      "vigente_hasta": "2026-08",
+      "origen": "manual"
+    }
+  },
+  "historial": [
+    {
+      "fin": "2026-09-08T03:51:39+00:00",
+      "desde": "2026-05-10",
+      "hasta": "2026-09-07",
+      "declaraciones_nuevas": 719,
+      "declaraciones_acumuladas": 734,
+      "n_errores": 0,
+      "aplicado": true,
+      "motivo_no_aplicado": null,
+      "duracion_s": 202.0
+    },
+    {
+      "fin": "2026-09-08T03:48:04+00:00",
+      "desde": "2026-05-10",
+      "hasta": "2026-09-07",
+      "declaraciones_nuevas": 15,
+      "declaraciones_acumuladas": 15,
+      "n_errores": 0,
+      "aplicado": false,
+      "motivo_no_aplicado": "Ningun mes cerrado alcanza el minimo de declaraciones (50). Amplie la ventana de barrido o revise el padron de importadores.",
+      "duracion_s": 2.1
+    }
+  ],
+  "ultima_ejecucion_programada": null
+}
