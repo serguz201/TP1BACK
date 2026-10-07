@@ -112,7 +112,7 @@ def generate_quotation_pdf(quotation) -> bytes:
     pdf.set_text_color(100, 100, 100)
     pdf.cell(
         0, 6,
-        f"Intervalo de confianza 95%: USD {quotation.ic95_min:,.2f} - USD {quotation.ic95_max:,.2f}",
+        f"Intervalo predictivo 95%: USD {quotation.ic95_min:,.2f} - USD {quotation.ic95_max:,.2f}",
         align="C", ln=True,
     )
     # H-18: el PDF omitia `mape_regimen` y `mape_modelo`, pese a que la

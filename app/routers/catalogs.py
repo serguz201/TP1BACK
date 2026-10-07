@@ -35,10 +35,12 @@ async def list_importadores(_=Depends(get_current_user)):
     tramo de ENTRENAMIENTO, excluyendo el bucket anonimizado por Ley 29733.
 
     Cobertura real, medida y guardada en modelo_meta.json → cobertura_catalogos:
-    las 56 opciones cubren el 90.5% de las filas del histórico (96.9% si se
+    las 51 opciones cubren el 88.06% de las filas del histórico (94.3% si se
     excluyen las anonimizadas, que ninguna empresa puede seleccionar). La cifra
     de "≈98.5% del volumen real" que figuraba aquí no correspondía a ninguna
-    medición y se corrigió en la segunda auditoría.
+    medición y se corrigió en la segunda auditoría; las de "56 opciones / 90.5%"
+    venían del artifact del esquema 70/20/10 y se corrigieron en la cuarta.
+    No escribir estos números a mano: proceden de `cobertura_catalogos`.
 
     Fuente: modelo_meta.json → importadores_dropdown.
     """

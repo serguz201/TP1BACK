@@ -150,6 +150,7 @@ async def reset_rates(request: Request, usuario=Depends(require_roles("admin")))
 # ORDEN DE REENTRENAMIENTO, que este endpoint NO puede verificar por usted:
 #   1. python -m ml.train_model            (escribe modelo_meta.json y el .pkl)
 #   2. python -m ml.train_quantile_models  (lee esos encoders ya guardados)
+#   2b. python -m ml.walk_forward          (anade el origen rodante al mismo meta)
 #   3. POST /api/maintenance/model/reload
 # Invertir 1 y 2 produce modelos de cuantiles calibrados contra encoders viejos.
 
