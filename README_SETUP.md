@@ -168,11 +168,13 @@ trae que el modelo no conozca.
 Con el botón «Reentrenar modelo», o `POST /api/maintenance/model/retrain`. El
 orquestador:
 
-1. Respalda los cuatro ficheros del artefacto.
-2. Ejecuta `ml.train_model` y **después** `ml.train_quantile_models` — el orden
-   lo impone el sistema, porque el segundo lee los codificadores del primero.
-3. Si algo falla, restaura el respaldo (verificado: los cuatro ficheros quedan
-   byte a byte idénticos) y el proceso sigue sirviendo el modelo anterior.
+1. Respalda los cinco ficheros del artefacto (los tres `.pkl`,
+   `modelo_meta.json` y `walk_forward_2025.json`).
+2. Ejecuta `ml.train_model`, **después** `ml.train_quantile_models` y **después**
+   `ml.walk_forward` — el orden lo impone el sistema: el segundo lee los
+   codificadores del primero y el tercero reutiliza su receta de entrenamiento.
+3. Si algo falla, restaura el respaldo (verificado: los ficheros quedan byte a
+   byte idénticos) y el proceso sigue sirviendo el modelo anterior.
 4. Si todo va bien, recarga el artefacto en caliente y compara el MAPE.
 
 Un MAPE que empeora **no revierte solo**: un corpus más largo puede subirlo
@@ -184,6 +186,8 @@ A mano sigue funcionando igual:
 ```bash
 python -m ml.train_model            # escribe modelo_meta.json + el .pkl puntual
 python -m ml.train_quantile_models  # lee esos encoders ya guardados
+python -m ml.walk_forward           # origen rodante mensual 2025 -> walk_forward_2025.json
+python -m scripts.verificar_split_80_20   # comprueba el artefacto resultante
 # y después: POST /api/maintenance/model/reload
 ```
 
