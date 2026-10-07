@@ -9,10 +9,41 @@ metodologico se hace una sola vez, en este archivo.
 Decisiones metodologicas implementadas aqui (todas verificables en la salida de
 `diagnostico_recorte()` y en los prints de los scripts):
 
-  1. PARTICION POR FECHA, NO POR INDICE. Los cortes 70/20/10 se redondean al
-     limite de dia siguiente, de modo que ninguna fecha aparece en dos
-     particiones. Cortar por posicion dejaba filas del mismo dia (y por tanto
-     de la misma nave/declaracion) a ambos lados de la frontera.
+  1. PARTICION POR FECHA, NO POR INDICE. Los cortes se redondean al limite de
+     dia siguiente, de modo que ninguna fecha aparece en dos particiones.
+     Cortar por posicion dejaba filas del mismo dia (y por tanto de la misma
+     nave/declaracion) a ambos lados de la frontera.
+
+     ESQUEMA VIGENTE: "80_20" (ver `ESQUEMA_DEFAULT`). El corte principal es un
+     ANIO CALENDARIO, no un cuantil: TRAIN = 2021-2024, HOLDOUT = todo 2025.
+     Es lo que pidio la revision metodologica y tiene dos ventajas sobre el
+     70/20/10 anterior: (a) la frontera es interpretable y reproducible sin
+     recalcular cuantiles cada vez que crece el corpus, y (b) el holdout cubre
+     los DOCE meses de un anio completo, de modo que la evaluacion no depende
+     del regimen de mercado de un tramo corto y arbitrario (el TEST del
+     esquema anterior eran 5 meses excepcionalmente calmos, y por eso su R2 no
+     era interpretable). El esquema "70_20_10" se conserva intacto y
+     seleccionable para poder reproducir los resultados historicos.
+
+     SUBPARTICION INTERNA DEL 80% (esto es lo que hace que el holdout sea
+     honesto). El 80% de entrenamiento se corta a su vez por fecha en un 80/20
+     anidado. La cabeza ajusta los encoders, las medianas y los umbrales de
+     recorte; la cola sirve para calibrar el intervalo conformal, que exige
+     datos no vistos por los modelos de cuantiles. Consecuencia buscada:
+     NINGUNA fila de 2025 interviene en ajuste, calibracion, seleccion de
+     umbrales ni encoders. 2025 solo se lee para medir. La alternativa —usar
+     2025 como conjunto de ajuste intermedio, que es la lectura literal de
+     "validacion"— habria contaminado justo el conjunto sobre el que se
+     reportan las metricas.
+
+     EVALUACION QUE ACOMPANA AL ESQUEMA: el holdout 2025 da UNA foto (un
+     modelo congelado en 2024-12 mirando doce meses hacia adelante, con hasta
+     11 meses de horizonte). `ml/walk_forward.py` da la otra: reentrena mes a
+     mes durante 2025 (entrena hasta diciembre-2024 y predice enero, entrena
+     hasta enero y predice febrero, y asi los doce meses), que es como opera
+     realmente un sistema reentrenado con periodicidad mensual. Las dos cifras
+     deben leerse juntas: la primera acota el coste de NO reentrenar, la
+     segunda el rendimiento esperable SI se reentrena.
 
   2. RECORTE DE OUTLIERS AJUSTADO SOLO CON TRAIN. Los percentiles P0.5-P99.5 se
      calculan usando exclusivamente el tramo de entrenamiento y luego se aplican
@@ -49,8 +80,14 @@ en produccion (el mes anterior ya esta cerrado cuando se cotiza), por lo que se
 mantiene; el diseno es transductivo y debe declararse como tal. Dos salvedades
 que la segunda auditoria pidio explicitar:
 
-  - Ningun DIA se reparte entre particiones, pero el MES 2025-08 si cae en VAL
-    y TEST a la vez, y el mes es la unidad en la que operan los rezagos.
+  - Ningun DIA se reparte entre particiones. En el esquema 70_20_10 el MES
+    2025-08 si caia en VAL y TEST a la vez, y el mes es la unidad en la que
+    operan los rezagos. El esquema 80_20 ELIMINA ese caso en la frontera que
+    importa: el corte 2021-2024 / 2025 es un limite de anio calendario, asi
+    que ningun mes se reparte entre el 80% y el holdout. Subsiste, menor, en
+    la frontera INTERNA del 80% (train / val interno), que si cae a mitad de
+    mes; no afecta a la honestidad del holdout, solo al tamano efectivo del
+    set de calibracion.
   - El argumento "el mes anterior ya esta cerrado" supone disponibilidad
     inmediata de la estadistica aduanera. SUNAT publica con rezago, asi que en
     produccion real los rezagos pueden llegar con un mes mas de retraso del que
@@ -58,8 +95,15 @@ que la segunda auditoria pidio explicitar:
     riesgo por el extremo pesimista.
 
 EXPERIMENTOS NEGATIVOS (probados y descartados; se documentan para que no se
-vuelvan a proponer sin datos). Los dos primeros los midio la segunda auditoria y
-la tercera los reprodujo exactamente; el tercero NO reprodujo y se corrigio:
+vuelvan a proponer sin datos).
+
+AVISO DE VIGENCIA: las cifras concretas de esta lista se midieron bajo el
+esquema 70/20/10, cuyo TEST eran cinco meses de 2025, y NO son comparables con
+las del esquema 80/20 vigente, cuyo holdout es el ano entero. Lo que sigue
+vigente es la DECISION y su motivo —que es para lo que existe la lista: impedir
+que se vuelvan a proponer sin datos—, no el decimal. Las ablaciones que si
+tienen que estar al dia se recalculan en cada ejecucion y viven en el artifact
+(`ablacion_semana_anio`, `ablacion_colas_features`), no en este comentario.
 
   - Filtro de plausibilidad comercial `PESO_NETO >= 20 kg` (elimina 0.70% de
     filas: muestras y repuestos): MAPE 22.23% -> 21.67% pero MAE 0.0383 ->
@@ -79,13 +123,21 @@ la tercera los reprodujo exactamente; el tercero NO reprodujo y se corrigio:
     `train_model.py` en cada ejecucion (meta -> `ablacion_semana_anio`) para que
     no pueda volver a quedar obsoleta. El resultado real es que quitar la
     feature MEJORA el MAPE y empeora levemente un R2 que el propio documento
-    declara inestable. Se CONSERVA la feature por continuidad con el pipeline
-    original y porque el R2 la respalda, pero la justificacion honesta es
-    "indiferente", no "aporta senal": ver `meta["ablacion_semana_anio"]`.
+    declara inestable. Se CONSERVA la feature.
+
+    QUINTA REVISION: bajo el esquema 80/20 el signo se INVIERTE — quitar
+    `semana_anio` empeora el MAPE del holdout. Que una misma ablacion cambie de
+    signo al cambiar el periodo de evaluacion es, en si mismo, el resultado mas
+    informativo de los tres: la feature no tiene un efecto estable, y ninguna de
+    las dos mediciones deberia citarse como si lo tuviera. El numero vigente lo
+    calcula `train_model.py` en cada ejecucion: ver
+    `meta["ablacion_semana_anio"]`. Su sensibilidad (una variacion mediana del
+    ~25% moviendo solo esa feature) sigue siendo el argumento en contra.
 
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -98,6 +150,37 @@ import pandas as pd
 PAISES_ORIGEN = ["CN", "TH", "VN", "KR", "JP", "ID", "MY", "IN", "SG", "PH", "HK", "TW"]
 
 P_LOW, P_HIGH = 0.005, 0.995
+
+# ── Esquema de particion ───────────────────────────────────────────────────
+# AVISO SOBRE EL NOMBRE (cuarta auditoria). "80_20" es un IDENTIFICADOR
+# historico, no una proporcion. El corte real es una frontera de ano calendario
+# y el reparto que produce es 74.6% / 25.4% (61,406 / 20,891 filas), no 80/20.
+# El identificador se conserva porque viaja dentro de los artifacts ya
+# generados (`modelo_meta.json`, `walk_forward_2025.json -> esquema_particion
+# _base`) y renombrarlo los invalidaria sin reentrenar. El paper, en cambio, ya
+# no usa esta etiqueta en ningun sitio: dice "particion temporal por ano
+# calendario: entrenamiento 2021-2024 (74.6%) y validacion 2025 (25.4%)", que
+# es la descripcion correcta. Leer "80/20" mas abajo como el nombre del
+# esquema, nunca como un porcentaje de filas.
+#
+# "80_20"    : TRAIN = 2021-2024, HOLDOUT = todo 2025 (esquema vigente).
+#              El bloque de entrenamiento se subdivide 80/20 POR FECHA — esta
+#              subparticion interna si es proporcional: cabeza para ajustar,
+#              cola para early stopping + calibracion conformal.
+# "70_20_10" : esquema historico por cuantiles posicionales 0.70 / 0.90.
+#              Se conserva para reproducir los resultados anteriores; el
+#              artifact que produjo esta respaldado en ml/respaldo_70_20_10/.
+ESQUEMAS = ("80_20", "70_20_10")
+ESQUEMA_DEFAULT = os.environ.get("JPS_SPLIT_ESQUEMA", "80_20")
+
+# Primer dia del holdout en el esquema 80_20. Es una fecha, no un cuantil: la
+# revision metodologica pidio explicitamente "train 2021-2024, validacion todo
+# 2025", y una frontera de anio calendario no se mueve cuando crece el corpus.
+INICIO_HOLDOUT_80_20 = pd.Timestamp("2025-01-01")
+
+# Fraccion del bloque de entrenamiento que se reserva, por fecha y al final,
+# para early stopping y calibracion conformal (subparticion 80/20 anidada).
+FRACCION_TRAIN_INTERNO = 0.80
 
 FEATURES = [
     "mes", "trimestre", "semana_anio", "mes_sin", "mes_cos",
@@ -127,7 +210,25 @@ NOTA_LEY_29733 = (
 
 @dataclass
 class Particiones:
-    """Dataset particionado + los encoders ajustados exclusivamente con train."""
+    """Dataset particionado + los encoders ajustados exclusivamente con train.
+
+    Los nombres de los tres tramos se conservan (`train` / `val` / `test`)
+    porque son los que consume todo el resto del sistema, pero en el esquema
+    vigente su LECTURA cambia y conviene tenerla delante:
+
+      train : cabeza del 80% (2021 -> ~mediados de 2024). Ajusta los modelos,
+              los encoders, las medianas y los umbrales de recorte.
+      val   : cola del 80% (~mediados de 2024 -> 2024-12). Early stopping y,
+              partido en dos por `split_val()`, calibracion conformal.
+              Sigue siendo entrenamiento en el sentido del split 80/20: no es
+              el conjunto sobre el que se reportan resultados.
+      test  : el 20% = todo 2025. Es la "validacion" del esquema 80/20 tal y
+              como la nombro la revision metodologica. NUNCA participa en
+              ningun ajuste. Es el conjunto cuyas metricas se publican.
+
+    `etiquetas()` devuelve esta correspondencia para volcarla al artifact, de
+    modo que quien lea `modelo_meta.json` no tenga que deducirla.
+    """
     train: pd.DataFrame
     val: pd.DataFrame
     test: pd.DataFrame
@@ -145,6 +246,41 @@ class Particiones:
     diag_recorte: pd.DataFrame
     diag_sesgo_recorte: dict = field(default_factory=dict)
     diag_ruta_default: dict = field(default_factory=dict)
+    esquema: str = ESQUEMA_DEFAULT
+
+    def etiquetas(self) -> dict:
+        """Como se llama cada tramo en el esquema con el que se construyo."""
+        if self.esquema == "80_20":
+            return {
+                "esquema": "80_20",
+                "criterio": (
+                    "TRAIN = 2021-2024 (80%), HOLDOUT = todo 2025 (20%), corte "
+                    "por anio calendario; el 80% se subdivide 80/20 por fecha "
+                    "en cabeza y cola, y la cola reserva su ultima mitad para "
+                    "la calibracion conformal"
+                ),
+                "train": "cabeza del 80% — ajuste de modelos, encoders y umbrales",
+                "val": ("cola del 80% — entra al ajuste del modelo puntual; su "
+                        "ultima mitad se reserva para la calibracion conformal"),
+                "test": (
+                    "el 20% = todo 2025. Es la VALIDACION del esquema 80/20: "
+                    "nunca participa en ningun ajuste y es donde se miden los "
+                    "resultados publicados"
+                ),
+                "evaluacion_complementaria": (
+                    "ml/walk_forward.py — reentrenamiento mensual sobre los 12 "
+                    "meses de 2025 (origen rodante)"
+                ),
+            }
+        return {
+            "esquema": "70_20_10",
+            "criterio": "cuantiles posicionales 0.70 / 0.90 redondeados a limite de dia",
+            "train": "70% inicial", "val": "20% intermedio", "test": "10% final",
+            "nota": (
+                "Esquema historico. Se conserva para reproducir los resultados "
+                "anteriores; el artifact que produjo esta en ml/respaldo_70_20_10/."
+            ),
+        }
 
     def split_val(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.Timestamp]:
         """Parte VAL en dos mitades cronologicas con corte limpio por fecha.
@@ -324,8 +460,48 @@ def _diagnostico_ruta_default(scope: pd.DataFrame, lookup: dict, default: int) -
     }
 
 
-def construir(csv_path: str) -> Particiones:
-    """Carga el CSV crudo y devuelve las particiones + los encoders de train."""
+def _cortes(fechas: pd.Series, esquema: str) -> tuple[pd.Timestamp, pd.Timestamp]:
+    """(corte train/val, corte val/test) para el esquema pedido.
+
+    En 80_20 el corte externo es una FECHA FIJA (2025-01-01) y el interno se
+    deriva de la masa de datos que queda por debajo de el, para que la cola de
+    early stopping + calibracion tenga siempre un tamano proporcional al
+    bloque de entrenamiento y no dependa del anio en que se ejecute.
+
+    Se valida que el corte externo caiga dentro del rango de datos: si el
+    corpus creciera hacia atras o hacia adelante y 2025 quedara vacio (o lo
+    quedara el tramo 2021-2024), el fallo debe ser ruidoso aqui y no un
+    entrenamiento silencioso sobre un holdout de cero filas.
+    """
+    if esquema not in ESQUEMAS:
+        raise ValueError(f"esquema desconocido: {esquema!r}; use uno de {ESQUEMAS}")
+
+    if esquema == "70_20_10":
+        return _corte_por_fecha(fechas, 0.70), _corte_por_fecha(fechas, 0.90)
+
+    corte_holdout = INICIO_HOLDOUT_80_20
+    n_train = int((fechas < corte_holdout).sum())
+    n_holdout = int((fechas >= corte_holdout).sum())
+    if n_train == 0 or n_holdout == 0:
+        raise ValueError(
+            f"el esquema 80_20 parte en {corte_holdout.date()} y ese corte deja "
+            f"{n_train} filas de entrenamiento y {n_holdout} de holdout. El "
+            "corpus no cubre el periodo que el esquema supone (2021-2024 + 2025)."
+        )
+    corte_interno = _corte_por_fecha(
+        fechas[fechas < corte_holdout], FRACCION_TRAIN_INTERNO
+    )
+    return corte_interno, corte_holdout
+
+
+def cargar_scope(csv_path: str) -> pd.DataFrame:
+    """CSV crudo -> filas dentro del alcance, ordenadas, con target y ruta real.
+
+    Se separo de `construir()` para que `ml/walk_forward.py` pueda recortar el
+    scope por fecha y volver a particionarlo mes a mes SIN duplicar el filtro
+    de alcance. Que el origen rodante y el entrenamiento de produccion
+    compartan esta funcion es lo que garantiza que evaluen el mismo universo.
+    """
     df = pd.read_csv(csv_path, sep=",", quotechar='"', encoding="utf-8", low_memory=False)
     df["FECHA"] = pd.to_datetime(df["FECHA"], format="%Y%m%d", errors="coerce")
     df["CNAN"] = df["CNAN"].astype(str).str.zfill(10)
@@ -336,16 +512,44 @@ def construir(csv_path: str) -> Particiones:
         & (df["ADUA_DESC"].str.upper().str.contains("CALLAO", na=False))
         & (df["CPAIS"].isin(PAISES_ORIGEN))
     )
-    scope = df.loc[mask].sort_values("FECHA").reset_index(drop=True)
+    scope = df.loc[mask].sort_values("FECHA", kind="mergesort").reset_index(drop=True)
     scope["FLETE_UNIT"] = scope["FLE_DOLAR"] / scope["PESO_NETO"]
     # Valor real por fila. Se conserva con nombre propio: es la fuente del
     # lookup y de los diagnosticos, pero NUNCA es la feature.
     scope["ruta_directa_real"] = (scope["CPAIS_PROC"] == scope["CPAIS"]).astype(int)
+    return scope
 
+
+def construir(csv_path: str, esquema: str = ESQUEMA_DEFAULT) -> Particiones:
+    """Carga el CSV crudo y devuelve las particiones + los encoders de train."""
+    scope = cargar_scope(csv_path)
     # Cortes provisionales sobre el alcance (se reusan como cortes definitivos:
     # son fechas, no posiciones, asi que el recorte posterior no los desplaza).
-    fecha_corte_train = _corte_por_fecha(scope["FECHA"], 0.70)
-    fecha_corte_val = _corte_por_fecha(scope["FECHA"], 0.90)
+    fecha_corte_train, fecha_corte_val = _cortes(scope["FECHA"], esquema)
+    return particionar(scope, fecha_corte_train, fecha_corte_val, esquema)
+
+
+def particionar(
+    scope: pd.DataFrame,
+    fecha_corte_train: pd.Timestamp,
+    fecha_corte_val: pd.Timestamp,
+    esquema: str = ESQUEMA_DEFAULT,
+) -> Particiones:
+    """Recorte, feature engineering, particion y encoders sobre un scope dado.
+
+    Todo lo que se ajusta aqui —lookup de ruta, umbrales de recorte, encoders,
+    medianas— usa EXCLUSIVAMENTE las filas anteriores a `fecha_corte_train`.
+    `ml/walk_forward.py` llama a esta funcion una vez por mes evaluado, con el
+    scope truncado a la historia disponible en ese momento, de modo que el
+    origen rodante no puede usar una metodologia distinta de la de produccion:
+    es literalmente el mismo codigo.
+    """
+    scope = scope.sort_values("FECHA", kind="mergesort").reset_index(drop=True)
+    # Los umbrales de recorte y el lookup de ruta se ajustan con la CABEZA del
+    # bloque de entrenamiento, no con el bloque entero. Asi la cola (val) sigue
+    # siendo un conjunto no visto tambien para la calibracion conformal, que es
+    # lo que exige la garantia de CQR. En ningun esquema entra aqui una sola
+    # fila del holdout.
     es_train = scope["FECHA"] < fecha_corte_train
 
     # El lookup se ajusta ANTES del recorte porque es la clave de estratificacion.
@@ -362,7 +566,7 @@ def construir(csv_path: str) -> Particiones:
     diag_sesgo_recorte = _diagnostico_sesgo_recorte(scope, conservar)
 
     clean = scope[conservar].drop_duplicates()
-    clean = clean[clean["FLE_DOLAR"] > 0].sort_values("FECHA").reset_index(drop=True)
+    clean = clean[clean["FLE_DOLAR"] > 0].sort_values("FECHA", kind="mergesort").reset_index(drop=True)
 
     # ── Feature engineering ────────────────────────────────────────────────
     fe = clean
@@ -385,7 +589,7 @@ def construir(csv_path: str) -> Particiones:
     )
 
     fe = fe.dropna(subset=["mercado_lag1", "mercado_lag2", "mercado_lag3", "mercado_ma3"])
-    fe = fe.sort_values("FECHA").reset_index(drop=True)
+    fe = fe.sort_values("FECHA", kind="mergesort").reset_index(drop=True)
 
     # ── Particion por fecha (ningun dia queda repartido) ───────────────────
     train = fe[fe["FECHA"] < fecha_corte_train].copy()
@@ -419,6 +623,7 @@ def construir(csv_path: str) -> Particiones:
         diag_recorte=diag_recorte,
         diag_sesgo_recorte=diag_sesgo_recorte,
         diag_ruta_default=diag_ruta_default,
+        esquema=esquema,
     )
     p.train = aplicar_encoders(p.train, p)
     p.val = aplicar_encoders(p.val, p)

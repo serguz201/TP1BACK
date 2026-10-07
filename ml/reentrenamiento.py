@@ -6,19 +6,20 @@ QUE RESUELVE
 Reentrenar eran dos comandos que alguien tenia que recordar ejecutar EN ORDEN
 en el servidor, sin red de seguridad: si el segundo fallaba, el sistema quedaba
 con `modelo_meta.json` y el modelo puntual nuevos pero los modelos de cuantiles
-viejos —intervalos de confianza calibrados contra codificadores que ya no
+viejos —intervalos predictivos calibrados contra codificadores que ya no
 existen— y nadie se enteraba hasta ver una cotizacion rara.
 
 Este modulo convierte eso en una operacion con las cuatro propiedades que hacen
 que se pueda ejecutar sin miedo:
 
   1. ORDEN GARANTIZADO. train_model.py primero (escribe modelo_meta.json con
-     los codificadores nuevos), train_quantile_models.py despues (los lee). No
-     hay forma de invertirlos desde aqui.
-  2. TODO O NADA. Los cuatro ficheros del artifact se respaldan antes de
-     empezar. Si cualquiera de los dos pasos falla, se restauran y el proceso
+     los codificadores nuevos), train_quantile_models.py despues (los lee) y
+     walk_forward.py al final (anade al mismo meta el informe del origen
+     rodante). No hay forma de alterar ese orden desde aqui.
+  2. TODO O NADA. Los ficheros del artifact se respaldan en bloque antes de
+     empezar. Si cualquiera de los pasos falla, se restauran y el proceso
      sigue sirviendo el modelo anterior.
-  3. AUDITABLE. Se captura la salida completa de ambos scripts y se compara el
+  3. AUDITABLE. Se captura la salida completa de los tres scripts y se compara el
      MAPE de test de antes y despues, porque un reentrenamiento que empeora el
      modelo es un resultado posible y hay que verlo.
   4. REVERSIBLE A MANO. El respaldo sobrevive al exito, asi que un modelo que
@@ -57,13 +58,18 @@ logger = logging.getLogger(__name__)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 ML_DIR = BACKEND_DIR / "ml"
 
-# Los cuatro ficheros que constituyen el artifact. Se respaldan y se restauran
+# Los ficheros que constituyen el artifact. Se respaldan y se restauran
 # juntos: un meta nuevo con cuantiles viejos es un artifact roto.
 ARTIFACT = [
     "modelo_meta.json",
     "modelo_xgboost_flete.pkl",
     "modelo_xgboost_flete_q_lo.pkl",
     "modelo_xgboost_flete_q_hi.pkl",
+    # El informe del origen rodante forma parte del artifact, no es un anexo:
+    # describe el rendimiento del modelo que esta en los .pkl de al lado, y un
+    # artifact restaurado con el walk-forward de OTRO entrenamiento mentiria
+    # sobre si mismo. Se respalda y se restaura con los demas.
+    "walk_forward_2025.json",
 ]
 
 RESPALDO_DIR = ML_DIR / "respaldos_artifact"
@@ -73,7 +79,15 @@ PASOS = [
     ("train_model", "ml.train_model",
      "Modelo puntual y codificadores (puerto_freq, importador_freq, ruta_directa)"),
     ("train_quantile_models", "ml.train_quantile_models",
-     "Modelos de cuantiles e intervalos de confianza conformales"),
+     "Modelos de cuantiles e intervalos predictivos conformales"),
+    # TERCER PASO (esquema 80/20). El holdout mide el modelo congelado durante
+    # un ano entero; el origen rodante mide el sistema tal y como se opera,
+    # reentrenado cada mes. Se ejecuta DENTRO del reentrenamiento, y no a mano
+    # despues, porque si no las dos cifras del artifact acabarian describiendo
+    # entrenamientos distintos — que es la misma clase de desincronizacion que
+    # este modulo existe para impedir entre el modelo puntual y los cuantiles.
+    ("walk_forward", "ml.walk_forward",
+     "Walk-forward mensual sobre 2025 (origen rodante, 12 pliegues)"),
 ]
 
 # Un reentrenamiento completo son minutos, no horas. Pasado este limite se
@@ -190,7 +204,7 @@ def _respaldar(podar: bool = True, conservar: Optional[str] = None) -> Optional[
 
 
 def _restaurar(sello: str) -> None:
-    """Restaura los CUATRO ficheros del artifact o falla.
+    """Restaura TODOS los ficheros del artifact o falla.
 
     H-07. Antes cada fichero se copiaba solo `if f.exists()`, asi que un respaldo
     incompleto —o borrado por la poda— producia una restauracion parcial, o

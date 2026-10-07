@@ -1,0 +1,1779 @@
+{
+  "dataset": {
+    "filas_csv_crudo": 86977,
+    "filas_en_alcance": 86977,
+    "paises_origen_presentes": {
+      "CN": 86977
+    },
+    "pct_origen_CN": 100.0,
+    "rango_fechas_alcance": [
+      "2021-01-04",
+      "2025-12-31"
+    ],
+    "importadores_distintos_alcance": 167,
+    "puertos_distintos_alcance": 65,
+    "filas_tras_recorte_y_lags": 82297,
+    "particion": {
+      "train": 48378,
+      "val": 13028,
+      "test": 20891
+    },
+    "rango_fechas_particion": {
+      "train": [
+        "2021-04-02",
+        "2024-05-13"
+      ],
+      "val": [
+        "2024-05-14",
+        "2024-12-31"
+      ],
+      "test": [
+        "2025-01-02",
+        "2025-12-31"
+      ]
+    },
+    "top_puertos_en_alcance": {
+      "QINGDAO": {
+        "n": 69265,
+        "pct": 79.64
+      },
+      "SHANGHAI": {
+        "n": 4373,
+        "pct": 5.03
+      },
+      "SHEKOU": {
+        "n": 3077,
+        "pct": 3.54
+      },
+      "NINGBO": {
+        "n": 1519,
+        "pct": 1.75
+      },
+      "XIAMEN": {
+        "n": 1409,
+        "pct": 1.62
+      },
+      "BUSAN": {
+        "n": 1015,
+        "pct": 1.17
+      },
+      "YANTIAN": {
+        "n": 830,
+        "pct": 0.95
+      },
+      "DALIAN": {
+        "n": 768,
+        "pct": 0.88
+      },
+      "BALBOA": {
+        "n": 599,
+        "pct": 0.69
+      },
+      "MANZANILLO": {
+        "n": 363,
+        "pct": 0.42
+      },
+      "NANJING": {
+        "n": 326,
+        "pct": 0.37
+      },
+      "NANSHA": {
+        "n": 325,
+        "pct": 0.37
+      }
+    },
+    "top_puertos_dataset_modelado": {
+      "QINGDAO": {
+        "n": 65695,
+        "pct": 79.83
+      },
+      "SHANGHAI": {
+        "n": 4030,
+        "pct": 4.9
+      },
+      "SHEKOU": {
+        "n": 2859,
+        "pct": 3.47
+      },
+      "NINGBO": {
+        "n": 1494,
+        "pct": 1.82
+      },
+      "XIAMEN": {
+        "n": 1324,
+        "pct": 1.61
+      },
+      "BUSAN": {
+        "n": 1008,
+        "pct": 1.22
+      },
+      "DALIAN": {
+        "n": 754,
+        "pct": 0.92
+      },
+      "YANTIAN": {
+        "n": 713,
+        "pct": 0.87
+      },
+      "BALBOA": {
+        "n": 586,
+        "pct": 0.71
+      },
+      "MANZANILLO": {
+        "n": 321,
+        "pct": 0.39
+      },
+      "NANJING": {
+        "n": 318,
+        "pct": 0.39
+      },
+      "XINGANG": {
+        "n": 274,
+        "pct": 0.33
+      }
+    },
+    "importadores_distintos_modelado": 155,
+    "target": {
+      "media_USD_kg": 0.4119,
+      "mediana_USD_kg": 0.25,
+      "sd_USD_kg": 0.3328,
+      "min": 0.0329,
+      "max": 2.3111
+    },
+    "flete_total_USD": {
+      "media": 396.18,
+      "mediana": 138.06,
+      "suma": 32604342.34
+    }
+  },
+  "leakage": {
+    "encoders_ajustados_solo_con_train": true,
+    "puerto_freq_categorias": 54,
+    "importador_freq_categorias": 111,
+    "medianas_ajustadas_solo_con_train": {
+      "densidad_carga_median": 9.534,
+      "ratio_bruto_neto_median": 1.003915
+    },
+    "percentiles_recorte_solo_train": [
+      {
+        "ruta_directa": 0,
+        "n": 3436,
+        "n_train": 2449,
+        "p_low": 0.02617,
+        "p_high": 2.34114,
+        "recortadas": 24,
+        "pct_recortado": 0.698,
+        "fallback_percentiles_globales": false
+      },
+      {
+        "ruta_directa": 1,
+        "n": 83541,
+        "n_train": 50320,
+        "p_low": 0.07253,
+        "p_high": 1.46697,
+        "recortadas": 791,
+        "pct_recortado": 0.947,
+        "fallback_percentiles_globales": false
+      }
+    ],
+    "fechas_compartidas_entre_particiones": 0,
+    "pct_filas_categoria_no_vista_test": {
+      "puerto": 1.68,
+      "importador": 5.63
+    },
+    "verificacion_rezagos": [
+      {
+        "mes": "2025-01",
+        "lag1_servido": 0.283487,
+        "media_mes_anterior": 0.283487,
+        "coincide": true
+      },
+      {
+        "mes": "2025-02",
+        "lag1_servido": 0.248327,
+        "media_mes_anterior": 0.248327,
+        "coincide": true
+      },
+      {
+        "mes": "2025-03",
+        "lag1_servido": 0.239151,
+        "media_mes_anterior": 0.239151,
+        "coincide": true
+      },
+      {
+        "mes": "2025-04",
+        "lag1_servido": 0.183519,
+        "media_mes_anterior": 0.183519,
+        "coincide": true
+      },
+      {
+        "mes": "2025-05",
+        "lag1_servido": 0.177072,
+        "media_mes_anterior": 0.177072,
+        "coincide": true
+      }
+    ],
+    "transductividad_declarada": {
+      "mes_frontera_val_test": "2025-01",
+      "filas_del_mes_frontera": 2079,
+      "de_ellas_en_test": 2079,
+      "pct_de_la_media_mensual_aportado_por_test": 100.0,
+      "nota": "La serie mensual de mercado se construye sobre todo el periodo. Los rezagos solo miran meses ESTRICTAMENTE anteriores (shift), de modo que no hay look-ahead fila a fila; pero la media del mes frontera se calcula con filas que caen en dos particiones. Es una propiedad transductiva conocida y se declara como tal."
+    }
+  },
+  "trazabilidad": {
+    "campos_del_formulario": [
+      "puerto de embarque (obligatorio)",
+      "peso neto en toneladas (obligatorio)",
+      "unidades (opcional)",
+      "importador (opcional)",
+      "periodo + fecha: semanal / mensual / anual (obligatorio)"
+    ],
+    "mapa_features": {
+      "mes": {
+        "origen": "fecha de embarque (usuario)",
+        "construccion": "derivada: mes calendario"
+      },
+      "trimestre": {
+        "origen": "fecha de embarque (usuario)",
+        "construccion": "derivada: trimestre"
+      },
+      "semana_anio": {
+        "origen": "fecha de embarque (usuario)",
+        "construccion": "derivada: semana ISO"
+      },
+      "mes_sin": {
+        "origen": "fecha de embarque (usuario)",
+        "construccion": "derivada: sin(2*pi*mes/12)"
+      },
+      "mes_cos": {
+        "origen": "fecha de embarque (usuario)",
+        "construccion": "derivada: cos(2*pi*mes/12)"
+      },
+      "mercado_lag1": {
+        "origen": "serie de mercado (sistema)",
+        "construccion": "media del mes m-1"
+      },
+      "mercado_lag2": {
+        "origen": "serie de mercado (sistema)",
+        "construccion": "media del mes m-2"
+      },
+      "mercado_lag3": {
+        "origen": "serie de mercado (sistema)",
+        "construccion": "media del mes m-3"
+      },
+      "mercado_ma3": {
+        "origen": "serie de mercado (sistema)",
+        "construccion": "media movil de m-1..m-3"
+      },
+      "puerto_freq": {
+        "origen": "puerto de embarque (usuario)",
+        "construccion": "encoder de frecuencia ajustado con train"
+      },
+      "importador_freq": {
+        "origen": "importador (usuario, opcional)",
+        "construccion": "encoder de frecuencia; si se omite, mediana de train"
+      },
+      "densidad_carga": {
+        "origen": "peso neto y unidades (usuario; unidades opcional)",
+        "construccion": "peso/unidades; si falta, mediana de train"
+      },
+      "ratio_bruto_neto": {
+        "origen": "no capturado en el formulario",
+        "construccion": "SIEMPRE la mediana de train (constante en produccion)"
+      },
+      "ruta_directa": {
+        "origen": "puerto de embarque (usuario)",
+        "construccion": "lookup deterministico puerto -> regimen; nunca se pide"
+      }
+    },
+    "constantes_en_produccion": {
+      "ratio_bruto_neto": 1.003915,
+      "densidad_carga_default": 9.534,
+      "importador_freq_default": 0.00082682,
+      "puerto_freq_default": 0.00081649
+    },
+    "nota": "El formulario NO captura peso bruto ni tipo de contenedor. `ratio_bruto_neto` es por tanto una constante en produccion (la mediana de train) y `densidad_carga` cae a su mediana si el usuario omite las unidades. Ambas aportan en conjunto ~1.1% del gain, de modo que la degradacion es marginal, pero debe declararse: son features del entrenamiento que produccion no puede reconstruir con fidelidad."
+  },
+  "ablacion": {
+    "semillas": [
+      42,
+      7,
+      123,
+      2024,
+      31337
+    ],
+    "tabla": [
+      {
+        "configuracion": "temporales",
+        "n_features": 5,
+        "features": [
+          "mes",
+          "trimestre",
+          "semana_anio",
+          "mes_sin",
+          "mes_cos"
+        ],
+        "MAPE_%": 121.45,
+        "MAPE_sd": 0.03,
+        "MAPE_rango": [
+          121.42,
+          121.49
+        ],
+        "MAPE_semilla_42": 121.42,
+        "MAE": 0.2127,
+        "RMSE": 0.2434
+      },
+      {
+        "configuracion": "+ puerto_importador",
+        "n_features": 8,
+        "features": [
+          "mes",
+          "trimestre",
+          "semana_anio",
+          "mes_sin",
+          "mes_cos",
+          "puerto_freq",
+          "importador_freq",
+          "ruta_directa"
+        ],
+        "MAPE_%": 119.33,
+        "MAPE_sd": 0.53,
+        "MAPE_rango": [
+          118.54,
+          119.91
+        ],
+        "MAPE_semilla_42": 118.89,
+        "MAE": 0.2117,
+        "RMSE": 0.2529
+      },
+      {
+        "configuracion": "+ lag1",
+        "n_features": 9,
+        "features": [
+          "mes",
+          "trimestre",
+          "semana_anio",
+          "mes_sin",
+          "mes_cos",
+          "mercado_lag1",
+          "puerto_freq",
+          "importador_freq",
+          "ruta_directa"
+        ],
+        "MAPE_%": 30.57,
+        "MAPE_sd": 0.98,
+        "MAPE_rango": [
+          29.47,
+          31.77
+        ],
+        "MAPE_semilla_42": 29.47,
+        "MAE": 0.0569,
+        "RMSE": 0.0791
+      },
+      {
+        "configuracion": "+ lag2_lag3",
+        "n_features": 11,
+        "features": [
+          "mes",
+          "trimestre",
+          "semana_anio",
+          "mes_sin",
+          "mes_cos",
+          "mercado_lag1",
+          "mercado_lag2",
+          "mercado_lag3",
+          "puerto_freq",
+          "importador_freq",
+          "ruta_directa"
+        ],
+        "MAPE_%": 29.94,
+        "MAPE_sd": 1.09,
+        "MAPE_rango": [
+          28.64,
+          31.37
+        ],
+        "MAPE_semilla_42": 28.64,
+        "MAE": 0.0575,
+        "RMSE": 0.078
+      },
+      {
+        "configuracion": "+ media_movil",
+        "n_features": 12,
+        "features": [
+          "mes",
+          "trimestre",
+          "semana_anio",
+          "mes_sin",
+          "mes_cos",
+          "mercado_lag1",
+          "mercado_lag2",
+          "mercado_lag3",
+          "mercado_ma3",
+          "puerto_freq",
+          "importador_freq",
+          "ruta_directa"
+        ],
+        "MAPE_%": 28.45,
+        "MAPE_sd": 0.68,
+        "MAPE_rango": [
+          27.14,
+          29.03
+        ],
+        "MAPE_semilla_42": 27.14,
+        "MAE": 0.0548,
+        "RMSE": 0.0754
+      },
+      {
+        "configuracion": "+ fisicas",
+        "n_features": 14,
+        "features": [
+          "mes",
+          "trimestre",
+          "semana_anio",
+          "mes_sin",
+          "mes_cos",
+          "mercado_lag1",
+          "mercado_lag2",
+          "mercado_lag3",
+          "mercado_ma3",
+          "puerto_freq",
+          "importador_freq",
+          "densidad_carga",
+          "ratio_bruto_neto",
+          "ruta_directa"
+        ],
+        "MAPE_%": 28.0,
+        "MAPE_sd": 0.24,
+        "MAPE_rango": [
+          27.66,
+          28.23
+        ],
+        "MAPE_semilla_42": 27.66,
+        "MAE": 0.054,
+        "RMSE": 0.075
+      },
+      {
+        "configuracion": "solo mercado_ma3 (1 feature)",
+        "n_features": 1,
+        "features": [
+          "mercado_ma3"
+        ],
+        "MAPE_%": 42.7,
+        "MAPE_sd": 0.04,
+        "MAPE_rango": [
+          42.65,
+          42.75
+        ],
+        "MAPE_semilla_42": 42.72,
+        "MAE": 0.0813,
+        "RMSE": 0.1182
+      },
+      {
+        "configuracion": "solo mercado_lag1 (1 feature)",
+        "n_features": 1,
+        "features": [
+          "mercado_lag1"
+        ],
+        "MAPE_%": 26.48,
+        "MAPE_sd": 0.01,
+        "MAPE_rango": [
+          26.45,
+          26.49
+        ],
+        "MAPE_semilla_42": 26.49,
+        "MAE": 0.0517,
+        "RMSE": 0.0724
+      },
+      {
+        "configuracion": "solo variables de mercado (4)",
+        "n_features": 4,
+        "features": [
+          "mercado_lag1",
+          "mercado_lag2",
+          "mercado_lag3",
+          "mercado_ma3"
+        ],
+        "MAPE_%": 30.71,
+        "MAPE_sd": 1.83,
+        "MAPE_rango": [
+          27.43,
+          33.1
+        ],
+        "MAPE_semilla_42": 31.1,
+        "MAE": 0.06,
+        "RMSE": 0.0821
+      },
+      {
+        "configuracion": "solo lag1 + ma3 (2 features)",
+        "n_features": 2,
+        "features": [
+          "mercado_lag1",
+          "mercado_ma3"
+        ],
+        "MAPE_%": 32.51,
+        "MAPE_sd": 3.04,
+        "MAPE_rango": [
+          28.22,
+          37.33
+        ],
+        "MAPE_semilla_42": 37.33,
+        "MAE": 0.0618,
+        "RMSE": 0.0859
+      }
+    ],
+    "mape_modelo_completo": 28.0,
+    "comparaciones_pareadas_vs_completo": {
+      "solo mercado_ma3 (1 feature)": {
+        "delta_MAPE_pp": 14.85,
+        "IC95_delta": [
+          14.11,
+          15.67
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      },
+      "solo mercado_lag1 (1 feature)": {
+        "delta_MAPE_pp": -1.37,
+        "IC95_delta": [
+          -1.77,
+          -0.98
+        ],
+        "p_valor_bootstrap": 1.0,
+        "significativo_95": false
+      },
+      "solo lag1 + ma3 (2 features)": {
+        "delta_MAPE_pp": 4.51,
+        "IC95_delta": [
+          4.04,
+          5.04
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      },
+      "solo variables de mercado (4)": {
+        "delta_MAPE_pp": 2.77,
+        "IC95_delta": [
+          2.32,
+          3.24
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      }
+    },
+    "sensibilidad_a_la_semilla": {
+      "mape_semilla_42_artifact_desplegado": 27.66,
+      "mape_media_5_semillas": 28.0,
+      "mape_sd_5_semillas": 0.24,
+      "mape_rango_5_semillas": [
+        27.66,
+        28.23
+      ],
+      "nota": "HALLAZGO RELEVANTE PARA EL ARTICULO: el MAPE del artifact desplegado corresponde a la semilla 42, que es una de las cinco observadas y no tiene por que ser la tipica. La estimacion central honesta del modelo completo es la media entre semillas con su desviacion, que es lo que registran los campos de arriba. Reportar solo la semilla desplegada presentaria como propiedad del modelo lo que en parte es el muestreo estocastico de XGBoost (subsample=0.8, colsample_bytree=0.8). Comparense `mape_semilla_42_artifact_desplegado` y `mape_media_5_semillas` en esta misma ejecucion en vez de citar una cifra fija: bajo el esquema 80/20 el valor cambio y una nota con numeros escritos a mano habria quedado obsoleta sin avisar."
+    },
+    "nota": "Las features se pasan SIEMPRE en el orden canonico de dp.FEATURES: con colsample_bytree=0.8 el orden de columnas cambia el modelo bajo la misma semilla. Cada configuracion se repite con 5 semillas porque la dispersion entre semillas es del mismo orden que varias de las diferencias entre configuraciones; sin ella, la tabla invitaria a leer como mejora lo que es ruido. La comparacion decisiva para la revision es 'solo mercado_ma3' vs el modelo completo."
+  },
+  "modelos": {
+    "n_bootstrap": 2000,
+    "semillas": [
+      42,
+      7,
+      123,
+      2024,
+      31337
+    ],
+    "referencia": "XGBoost (perdida MAE)",
+    "tabla": [
+      {
+        "modelo": "LightGBM (perdida MAE)",
+        "MAE": 0.0449,
+        "RMSE": 0.0634,
+        "MAPE_%": 22.96,
+        "IC95_MAPE": [
+          22.66,
+          23.28
+        ],
+        "WAPE_%": 22.25,
+        "sMAPE_%": 22.14,
+        "MAPE_por_semilla": [
+          23.31,
+          23.18,
+          22.88,
+          23.36,
+          24.08
+        ],
+        "MAPE_media_semillas": 23.36,
+        "MAPE_sd_semillas": 0.4,
+        "delta_MAPE_vs_XGBoost_pp": -4.88,
+        "IC95_delta": [
+          -5.11,
+          -4.65
+        ],
+        "p_valor_bootstrap": 1.0,
+        "significativo_95": false
+      },
+      {
+        "modelo": "LightGBM",
+        "MAE": 0.0468,
+        "RMSE": 0.0639,
+        "MAPE_%": 24.11,
+        "IC95_MAPE": [
+          23.81,
+          24.42
+        ],
+        "WAPE_%": 23.15,
+        "sMAPE_%": 22.95,
+        "MAPE_por_semilla": [
+          23.67,
+          23.94,
+          24.41,
+          25.18,
+          24.41
+        ],
+        "MAPE_media_semillas": 24.32,
+        "MAPE_sd_semillas": 0.51,
+        "delta_MAPE_vs_XGBoost_pp": -3.74,
+        "IC95_delta": [
+          -3.95,
+          -3.51
+        ],
+        "p_valor_bootstrap": 1.0,
+        "significativo_95": false
+      },
+      {
+        "modelo": "CatBoost (perdida MAE)",
+        "MAE": 0.0479,
+        "RMSE": 0.0655,
+        "MAPE_%": 24.77,
+        "IC95_MAPE": [
+          24.46,
+          25.11
+        ],
+        "WAPE_%": 23.73,
+        "sMAPE_%": 23.58,
+        "MAPE_por_semilla": [
+          24.12,
+          24.81,
+          24.92,
+          25.29,
+          25.31
+        ],
+        "MAPE_media_semillas": 24.89,
+        "MAPE_sd_semillas": 0.43,
+        "delta_MAPE_vs_XGBoost_pp": -3.07,
+        "IC95_delta": [
+          -3.26,
+          -2.89
+        ],
+        "p_valor_bootstrap": 1.0,
+        "significativo_95": false
+      },
+      {
+        "modelo": "CatBoost",
+        "MAE": 0.0506,
+        "RMSE": 0.066,
+        "MAPE_%": 27.71,
+        "IC95_MAPE": [
+          27.37,
+          28.07
+        ],
+        "WAPE_%": 25.04,
+        "sMAPE_%": 24.74,
+        "MAPE_por_semilla": [
+          28.3,
+          27.96,
+          28.99,
+          26.46,
+          27.95
+        ],
+        "MAPE_media_semillas": 27.93,
+        "MAPE_sd_semillas": 0.83,
+        "delta_MAPE_vs_XGBoost_pp": -0.13,
+        "IC95_delta": [
+          -0.36,
+          0.11
+        ],
+        "p_valor_bootstrap": 0.8645,
+        "significativo_95": false
+      },
+      {
+        "modelo": "XGBoost (perdida MAE)",
+        "MAE": 0.0537,
+        "RMSE": 0.0747,
+        "MAPE_%": 27.84,
+        "IC95_MAPE": [
+          27.45,
+          28.26
+        ],
+        "WAPE_%": 26.56,
+        "sMAPE_%": 25.72,
+        "MAPE_por_semilla": [
+          27.66,
+          28.18,
+          27.75,
+          28.19,
+          28.23
+        ],
+        "MAPE_media_semillas": 28.0,
+        "MAPE_sd_semillas": 0.24
+      },
+      {
+        "modelo": "XGBoost (perdida cuadratica)",
+        "MAE": 0.0549,
+        "RMSE": 0.0719,
+        "MAPE_%": 28.11,
+        "IC95_MAPE": [
+          27.8,
+          28.44
+        ],
+        "WAPE_%": 27.17,
+        "sMAPE_%": 26.78,
+        "MAPE_por_semilla": [
+          27.27,
+          29.07,
+          28.43,
+          28.04,
+          28.41
+        ],
+        "MAPE_media_semillas": 28.24,
+        "MAPE_sd_semillas": 0.59,
+        "delta_MAPE_vs_XGBoost_pp": 0.26,
+        "IC95_delta": [
+          0.09,
+          0.45
+        ],
+        "p_valor_bootstrap": 0.0015,
+        "significativo_95": true
+      },
+      {
+        "modelo": "Baseline persistencia (lag1)",
+        "MAE": 0.0517,
+        "RMSE": 0.0714,
+        "MAPE_%": 28.64,
+        "IC95_MAPE": [
+          28.24,
+          29.05
+        ],
+        "WAPE_%": 25.59,
+        "sMAPE_%": 25.17,
+        "delta_MAPE_vs_XGBoost_pp": 0.79,
+        "IC95_delta": [
+          0.37,
+          1.24
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      },
+      {
+        "modelo": "Random Forest",
+        "MAE": 0.059,
+        "RMSE": 0.0804,
+        "MAPE_%": 29.36,
+        "IC95_MAPE": [
+          28.98,
+          29.76
+        ],
+        "WAPE_%": 29.2,
+        "sMAPE_%": 28.58,
+        "MAPE_por_semilla": [
+          29.2,
+          29.41,
+          29.29,
+          29.44,
+          29.59
+        ],
+        "MAPE_media_semillas": 29.39,
+        "MAPE_sd_semillas": 0.13,
+        "delta_MAPE_vs_XGBoost_pp": 1.51,
+        "IC95_delta": [
+          1.12,
+          1.9
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      },
+      {
+        "modelo": "Ridge",
+        "MAE": 0.0571,
+        "RMSE": 0.0759,
+        "MAPE_%": 30.41,
+        "IC95_MAPE": [
+          30.05,
+          30.79
+        ],
+        "WAPE_%": 28.24,
+        "sMAPE_%": 28.73,
+        "delta_MAPE_vs_XGBoost_pp": 2.55,
+        "IC95_delta": [
+          2.12,
+          3.02
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      },
+      {
+        "modelo": "Baseline media movil (ma3)",
+        "MAE": 0.059,
+        "RMSE": 0.0786,
+        "MAPE_%": 33.85,
+        "IC95_MAPE": [
+          33.36,
+          34.36
+        ],
+        "WAPE_%": 29.21,
+        "sMAPE_%": 28.05,
+        "delta_MAPE_vs_XGBoost_pp": 6.0,
+        "IC95_delta": [
+          5.5,
+          6.51
+        ],
+        "p_valor_bootstrap": 0.0,
+        "significativo_95": true
+      }
+    ],
+    "nota": "Cada modelo estocastico se entrena con 5 semillas y la prueba se hace sobre la prediccion PROMEDIADA entre ellas: la dispersion entre semillas es comparable a la diferencia entre algoritmos, de modo que una comparacion de una sola semilla no es concluyente. Bootstrap PAREADO sobre las filas de test (el mismo remuestreo para todos los modelos). El p-valor es la proporcion de remuestreos en que el modelo rival NO resulta peor que XGBoost."
+  },
+  "metricas_usd": {
+    "error_max_reconstruccion_USD": 4.547473508864641e-13,
+    "flete_total_test": {
+      "media_USD": 181.93,
+      "mediana_USD": 83.36,
+      "suma_USD": 3800707.2
+    },
+    "tabla": [
+      {
+        "modelo": "LightGBM (perdida MAE)",
+        "MAE_USD": 42.53,
+        "RMSE_USD": 123.57,
+        "MAPE_%": 22.96,
+        "WAPE_%": 23.38,
+        "sMAPE_%": 22.14
+      },
+      {
+        "modelo": "LightGBM",
+        "MAE_USD": 43.85,
+        "RMSE_USD": 127.48,
+        "MAPE_%": 24.11,
+        "WAPE_%": 24.1,
+        "sMAPE_%": 22.95
+      },
+      {
+        "modelo": "CatBoost (perdida MAE)",
+        "MAE_USD": 44.99,
+        "RMSE_USD": 127.93,
+        "MAPE_%": 24.77,
+        "WAPE_%": 24.73,
+        "sMAPE_%": 23.58
+      },
+      {
+        "modelo": "CatBoost",
+        "MAE_USD": 48.72,
+        "RMSE_USD": 133.82,
+        "MAPE_%": 27.71,
+        "WAPE_%": 26.78,
+        "sMAPE_%": 24.74
+      },
+      {
+        "modelo": "XGBoost (perdida MAE)",
+        "MAE_USD": 48.8,
+        "RMSE_USD": 137.45,
+        "MAPE_%": 27.84,
+        "WAPE_%": 26.82,
+        "sMAPE_%": 25.72
+      },
+      {
+        "modelo": "XGBoost (perdida cuadratica)",
+        "MAE_USD": 51.06,
+        "RMSE_USD": 137.88,
+        "MAPE_%": 28.11,
+        "WAPE_%": 28.06,
+        "sMAPE_%": 26.78
+      },
+      {
+        "modelo": "Baseline persistencia (lag1)",
+        "MAE_USD": 54.71,
+        "RMSE_USD": 154.32,
+        "MAPE_%": 28.64,
+        "WAPE_%": 30.07,
+        "sMAPE_%": 25.17
+      },
+      {
+        "modelo": "Random Forest",
+        "MAE_USD": 56.96,
+        "RMSE_USD": 178.12,
+        "MAPE_%": 29.36,
+        "WAPE_%": 31.31,
+        "sMAPE_%": 28.58
+      },
+      {
+        "modelo": "Ridge",
+        "MAE_USD": 57.27,
+        "RMSE_USD": 169.93,
+        "MAPE_%": 30.41,
+        "WAPE_%": 31.48,
+        "sMAPE_%": 28.73
+      },
+      {
+        "modelo": "Baseline media movil (ma3)",
+        "MAE_USD": 63.68,
+        "RMSE_USD": 174.48,
+        "MAPE_%": 33.85,
+        "WAPE_%": 35.0,
+        "sMAPE_%": 28.05
+      }
+    ],
+    "nota": "El flete total se reconstruye como prediccion_unitaria * PESO_NETO, exactamente como lo hace el sistema en produccion. El MAPE sobre el total difiere del MAPE sobre USD/kg porque pondera cada embarque por su tamano de forma distinta; el WAPE es la metrica robusta al denominador pequeno que la revision pedia."
+  },
+  "segmentos": {
+    "por_puerto": {
+      "QINGDAO": {
+        "n": 17090,
+        "MAPE_%": 27.3,
+        "MAE": 0.0529
+      },
+      "Otros": {
+        "n": 1423,
+        "MAPE_%": 34.44,
+        "MAE": 0.0699
+      },
+      "SHANGHAI": {
+        "n": 1022,
+        "MAPE_%": 24.46,
+        "MAE": 0.0523
+      },
+      "SHEKOU": {
+        "n": 699,
+        "MAPE_%": 30.17,
+        "MAE": 0.0484
+      },
+      "NINGBO": {
+        "n": 353,
+        "MAPE_%": 24.83,
+        "MAE": 0.0484
+      },
+      "BALBOA": {
+        "n": 304,
+        "MAPE_%": 36.87,
+        "MAE": 0.0457
+      }
+    },
+    "por_mes": {
+      "2025-12": {
+        "n": 2121,
+        "MAPE_%": 16.08,
+        "MAE": 0.0268
+      },
+      "2025-01": {
+        "n": 2079,
+        "MAPE_%": 21.52,
+        "MAE": 0.0468
+      },
+      "2025-10": {
+        "n": 1966,
+        "MAPE_%": 29.99,
+        "MAE": 0.0661
+      },
+      "2025-11": {
+        "n": 1943,
+        "MAPE_%": 21.88,
+        "MAE": 0.0324
+      },
+      "2025-07": {
+        "n": 1927,
+        "MAPE_%": 31.04,
+        "MAE": 0.0957
+      },
+      "2025-08": {
+        "n": 1651,
+        "MAPE_%": 20.93,
+        "MAE": 0.0513
+      },
+      "2025-06": {
+        "n": 1614,
+        "MAPE_%": 91.83,
+        "MAE": 0.1346
+      },
+      "2025-09": {
+        "n": 1610,
+        "MAPE_%": 14.7,
+        "MAE": 0.0292
+      },
+      "2025-05": {
+        "n": 1605,
+        "MAPE_%": 27.6,
+        "MAE": 0.0398
+      },
+      "2025-04": {
+        "n": 1542,
+        "MAPE_%": 17.56,
+        "MAE": 0.0319
+      },
+      "2025-02": {
+        "n": 1442,
+        "MAPE_%": 25.24,
+        "MAE": 0.059
+      },
+      "2025-03": {
+        "n": 1391,
+        "MAPE_%": 19.64,
+        "MAE": 0.0306
+      }
+    },
+    "por_cuartil_de_peso": {
+      "Q1 (menor)": {
+        "n": 5224,
+        "MAPE_%": 27.15,
+        "MAE": 0.0568
+      },
+      "Q4 (mayor)": {
+        "n": 5223,
+        "MAPE_%": 29.47,
+        "MAE": 0.0498
+      },
+      "Q2": {
+        "n": 5222,
+        "MAPE_%": 27.07,
+        "MAE": 0.0546
+      },
+      "Q3": {
+        "n": 5222,
+        "MAPE_%": 27.68,
+        "MAE": 0.0535
+      }
+    },
+    "por_representacion_importador": {
+      "visto en train": {
+        "n": 19714,
+        "MAPE_%": 26.73,
+        "MAE": 0.0529
+      },
+      "no visto en train": {
+        "n": 1177,
+        "MAPE_%": 46.53,
+        "MAE": 0.0657
+      }
+    },
+    "por_regimen_de_ruta": {
+      "directo": {
+        "n": 20176,
+        "MAPE_%": 27.48,
+        "MAE": 0.0529
+      },
+      "transbordo": {
+        "n": 715,
+        "MAPE_%": 37.92,
+        "MAE": 0.074
+      }
+    },
+    "nota": "El MAPE global puede ocultar diferencias por segmento. Se reporta desagregado por puerto, mes, tamano de embarque, representacion del importador en train y regimen de ruta."
+  },
+  "walkforward": {
+    "detalle_mensual": [
+      {
+        "mes": "2022-01",
+        "anio": 2022,
+        "trimestre": "2022-T1",
+        "n": 1866,
+        "n_entrenamiento": 9584,
+        "MAPE_%": 47.48,
+        "MAE": 0.5362,
+        "variacion_mercado_%": 0.98
+      },
+      {
+        "mes": "2022-02",
+        "anio": 2022,
+        "trimestre": "2022-T1",
+        "n": 1996,
+        "n_entrenamiento": 12274,
+        "MAPE_%": 15.96,
+        "MAE": 0.1459,
+        "variacion_mercado_%": 3.71
+      },
+      {
+        "mes": "2022-03",
+        "anio": 2022,
+        "trimestre": "2022-T1",
+        "n": 959,
+        "n_entrenamiento": 14263,
+        "MAPE_%": 26.41,
+        "MAE": 0.1379,
+        "variacion_mercado_%": 15.13
+      },
+      {
+        "mes": "2022-04",
+        "anio": 2022,
+        "trimestre": "2022-T2",
+        "n": 1587,
+        "n_entrenamiento": 15217,
+        "MAPE_%": 19.49,
+        "MAE": 0.1356,
+        "variacion_mercado_%": 9.05
+      },
+      {
+        "mes": "2022-05",
+        "anio": 2022,
+        "trimestre": "2022-T2",
+        "n": 1210,
+        "n_entrenamiento": 16799,
+        "MAPE_%": 35.32,
+        "MAE": 0.191,
+        "variacion_mercado_%": 22.49
+      },
+      {
+        "mes": "2022-06",
+        "anio": 2022,
+        "trimestre": "2022-T2",
+        "n": 1059,
+        "n_entrenamiento": 18011,
+        "MAPE_%": 16.43,
+        "MAE": 0.0872,
+        "variacion_mercado_%": 3.9
+      },
+      {
+        "mes": "2022-07",
+        "anio": 2022,
+        "trimestre": "2022-T3",
+        "n": 1216,
+        "n_entrenamiento": 19062,
+        "MAPE_%": 31.14,
+        "MAE": 0.1267,
+        "variacion_mercado_%": 7.66
+      },
+      {
+        "mes": "2022-08",
+        "anio": 2022,
+        "trimestre": "2022-T3",
+        "n": 1700,
+        "n_entrenamiento": 20276,
+        "MAPE_%": 17.35,
+        "MAE": 0.1212,
+        "variacion_mercado_%": 16.03
+      },
+      {
+        "mes": "2022-09",
+        "anio": 2022,
+        "trimestre": "2022-T3",
+        "n": 1227,
+        "n_entrenamiento": 21971,
+        "MAPE_%": 48.15,
+        "MAE": 0.2497,
+        "variacion_mercado_%": 17.42
+      },
+      {
+        "mes": "2022-10",
+        "anio": 2022,
+        "trimestre": "2022-T4",
+        "n": 862,
+        "n_entrenamiento": 23194,
+        "MAPE_%": 101.47,
+        "MAE": 0.4281,
+        "variacion_mercado_%": 29.56
+      },
+      {
+        "mes": "2022-11",
+        "anio": 2022,
+        "trimestre": "2022-T4",
+        "n": 763,
+        "n_entrenamiento": 24052,
+        "MAPE_%": 31.63,
+        "MAE": 0.1001,
+        "variacion_mercado_%": 22.53
+      },
+      {
+        "mes": "2022-12",
+        "anio": 2022,
+        "trimestre": "2022-T4",
+        "n": 663,
+        "n_entrenamiento": 24870,
+        "MAPE_%": 20.15,
+        "MAE": 0.0592,
+        "variacion_mercado_%": 12.96
+      },
+      {
+        "mes": "2023-01",
+        "anio": 2023,
+        "trimestre": "2023-T1",
+        "n": 98,
+        "n_entrenamiento": 25526,
+        "MAPE_%": 124.27,
+        "MAE": 0.2458,
+        "variacion_mercado_%": 15.97
+      },
+      {
+        "mes": "2023-02",
+        "anio": 2023,
+        "trimestre": "2023-T1",
+        "n": 52,
+        "n_entrenamiento": 25607,
+        "MAPE_%": 91.06,
+        "MAE": 0.1254,
+        "variacion_mercado_%": 35.37
+      },
+      {
+        "mes": "2023-03",
+        "anio": 2023,
+        "trimestre": "2023-T1",
+        "n": 43,
+        "n_entrenamiento": 25657,
+        "MAPE_%": 96.58,
+        "MAE": 0.1045,
+        "variacion_mercado_%": 26.61
+      },
+      {
+        "mes": "2023-04",
+        "anio": 2023,
+        "trimestre": "2023-T2",
+        "n": 118,
+        "n_entrenamiento": 25835,
+        "MAPE_%": 278.68,
+        "MAE": 0.3117,
+        "variacion_mercado_%": 6.24
+      },
+      {
+        "mes": "2023-05",
+        "anio": 2023,
+        "trimestre": "2023-T2",
+        "n": 339,
+        "n_entrenamiento": 27513,
+        "MAPE_%": 90.25,
+        "MAE": 0.1867,
+        "variacion_mercado_%": 33.0
+      },
+      {
+        "mes": "2023-06",
+        "anio": 2023,
+        "trimestre": "2023-T2",
+        "n": 1276,
+        "n_entrenamiento": 29562,
+        "MAPE_%": 39.26,
+        "MAE": 0.0776,
+        "variacion_mercado_%": 20.61
+      },
+      {
+        "mes": "2023-07",
+        "anio": 2023,
+        "trimestre": "2023-T3",
+        "n": 1387,
+        "n_entrenamiento": 31520,
+        "MAPE_%": 44.64,
+        "MAE": 0.0876,
+        "variacion_mercado_%": 1.17
+      },
+      {
+        "mes": "2023-08",
+        "anio": 2023,
+        "trimestre": "2023-T3",
+        "n": 1482,
+        "n_entrenamiento": 34175,
+        "MAPE_%": 61.38,
+        "MAE": 0.1017,
+        "variacion_mercado_%": 17.74
+      },
+      {
+        "mes": "2023-09",
+        "anio": 2023,
+        "trimestre": "2023-T3",
+        "n": 1399,
+        "n_entrenamiento": 37178,
+        "MAPE_%": 60.17,
+        "MAE": 0.1062,
+        "variacion_mercado_%": 6.15
+      },
+      {
+        "mes": "2023-10",
+        "anio": 2023,
+        "trimestre": "2023-T4",
+        "n": 1501,
+        "n_entrenamiento": 39103,
+        "MAPE_%": 60.27,
+        "MAE": 0.0999,
+        "variacion_mercado_%": 0.45
+      },
+      {
+        "mes": "2023-11",
+        "anio": 2023,
+        "trimestre": "2023-T4",
+        "n": 1568,
+        "n_entrenamiento": 40689,
+        "MAPE_%": 66.07,
+        "MAE": 0.0993,
+        "variacion_mercado_%": 13.28
+      },
+      {
+        "mes": "2023-12",
+        "anio": 2023,
+        "trimestre": "2023-T4",
+        "n": 1194,
+        "n_entrenamiento": 42256,
+        "MAPE_%": 21.68,
+        "MAE": 0.0306,
+        "variacion_mercado_%": 4.56
+      },
+      {
+        "mes": "2024-01",
+        "anio": 2024,
+        "trimestre": "2024-T1",
+        "n": 1296,
+        "n_entrenamiento": 43441,
+        "MAPE_%": 17.76,
+        "MAE": 0.025,
+        "variacion_mercado_%": 3.42
+      },
+      {
+        "mes": "2024-02",
+        "anio": 2024,
+        "trimestre": "2024-T1",
+        "n": 1042,
+        "n_entrenamiento": 44728,
+        "MAPE_%": 20.56,
+        "MAE": 0.0371,
+        "variacion_mercado_%": 2.99
+      },
+      {
+        "mes": "2024-03",
+        "anio": 2024,
+        "trimestre": "2024-T1",
+        "n": 662,
+        "n_entrenamiento": 45805,
+        "MAPE_%": 16.0,
+        "MAE": 0.0306,
+        "variacion_mercado_%": 4.66
+      },
+      {
+        "mes": "2024-04",
+        "anio": 2024,
+        "trimestre": "2024-T2",
+        "n": 1191,
+        "n_entrenamiento": 46463,
+        "MAPE_%": 14.69,
+        "MAE": 0.029,
+        "variacion_mercado_%": 7.93
+      },
+      {
+        "mes": "2024-05",
+        "anio": 2024,
+        "trimestre": "2024-T2",
+        "n": 1405,
+        "n_entrenamiento": 47655,
+        "MAPE_%": 21.13,
+        "MAE": 0.0428,
+        "variacion_mercado_%": 12.65
+      },
+      {
+        "mes": "2024-06",
+        "anio": 2024,
+        "trimestre": "2024-T2",
+        "n": 1794,
+        "n_entrenamiento": 49054,
+        "MAPE_%": 37.97,
+        "MAE": 0.1305,
+        "variacion_mercado_%": 60.04
+      },
+      {
+        "mes": "2024-07",
+        "anio": 2024,
+        "trimestre": "2024-T3",
+        "n": 1333,
+        "n_entrenamiento": 50868,
+        "MAPE_%": 52.43,
+        "MAE": 0.2572,
+        "variacion_mercado_%": 42.01
+      },
+      {
+        "mes": "2024-08",
+        "anio": 2024,
+        "trimestre": "2024-T3",
+        "n": 1515,
+        "n_entrenamiento": 52196,
+        "MAPE_%": 51.27,
+        "MAE": 0.2909,
+        "variacion_mercado_%": 27.63
+      },
+      {
+        "mes": "2024-09",
+        "anio": 2024,
+        "trimestre": "2024-T3",
+        "n": 1890,
+        "n_entrenamiento": 53730,
+        "MAPE_%": 55.89,
+        "MAE": 0.1564,
+        "variacion_mercado_%": 28.73
+      },
+      {
+        "mes": "2024-10",
+        "anio": 2024,
+        "trimestre": "2024-T4",
+        "n": 1923,
+        "n_entrenamiento": 55641,
+        "MAPE_%": 23.19,
+        "MAE": 0.0873,
+        "variacion_mercado_%": 8.62
+      },
+      {
+        "mes": "2024-11",
+        "anio": 2024,
+        "trimestre": "2024-T4",
+        "n": 2033,
+        "n_entrenamiento": 57672,
+        "MAPE_%": 25.55,
+        "MAE": 0.0741,
+        "variacion_mercado_%": 13.31
+      },
+      {
+        "mes": "2024-12",
+        "anio": 2024,
+        "trimestre": "2024-T4",
+        "n": 1585,
+        "n_entrenamiento": 59779,
+        "MAPE_%": 17.52,
+        "MAE": 0.0445,
+        "variacion_mercado_%": 14.03
+      },
+      {
+        "mes": "2025-01",
+        "anio": 2025,
+        "trimestre": "2025-T1",
+        "n": 2079,
+        "n_entrenamiento": 61406,
+        "MAPE_%": 20.16,
+        "MAE": 0.0429,
+        "variacion_mercado_%": 12.4
+      },
+      {
+        "mes": "2025-02",
+        "anio": 2025,
+        "trimestre": "2025-T1",
+        "n": 1436,
+        "n_entrenamiento": 63423,
+        "MAPE_%": 23.68,
+        "MAE": 0.0557,
+        "variacion_mercado_%": 4.57
+      },
+      {
+        "mes": "2025-03",
+        "anio": 2025,
+        "trimestre": "2025-T1",
+        "n": 1391,
+        "n_entrenamiento": 64917,
+        "MAPE_%": 20.2,
+        "MAE": 0.0311,
+        "variacion_mercado_%": 23.26
+      },
+      {
+        "mes": "2025-04",
+        "anio": 2025,
+        "trimestre": "2025-T2",
+        "n": 1542,
+        "n_entrenamiento": 66366,
+        "MAPE_%": 16.83,
+        "MAE": 0.0306,
+        "variacion_mercado_%": 3.51
+      },
+      {
+        "mes": "2025-05",
+        "anio": 2025,
+        "trimestre": "2025-T2",
+        "n": 1605,
+        "n_entrenamiento": 67839,
+        "MAPE_%": 36.96,
+        "MAE": 0.0537,
+        "variacion_mercado_%": 12.88
+      },
+      {
+        "mes": "2025-06",
+        "anio": 2025,
+        "trimestre": "2025-T2",
+        "n": 1614,
+        "n_entrenamiento": 69440,
+        "MAPE_%": 51.87,
+        "MAE": 0.0745,
+        "variacion_mercado_%": 2.63
+      },
+      {
+        "mes": "2025-07",
+        "anio": 2025,
+        "trimestre": "2025-T3",
+        "n": 1927,
+        "n_entrenamiento": 71025,
+        "MAPE_%": 32.88,
+        "MAE": 0.103,
+        "variacion_mercado_%": 64.66
+      },
+      {
+        "mes": "2025-08",
+        "anio": 2025,
+        "trimestre": "2025-T3",
+        "n": 1651,
+        "n_entrenamiento": 73019,
+        "MAPE_%": 13.62,
+        "MAE": 0.0318,
+        "variacion_mercado_%": 12.25
+      },
+      {
+        "mes": "2025-09",
+        "anio": 2025,
+        "trimestre": "2025-T3",
+        "n": 1610,
+        "n_entrenamiento": 74639,
+        "MAPE_%": 15.99,
+        "MAE": 0.0329,
+        "variacion_mercado_%": 11.99
+      },
+      {
+        "mes": "2025-10",
+        "anio": 2025,
+        "trimestre": "2025-T4",
+        "n": 1966,
+        "n_entrenamiento": 76237,
+        "MAPE_%": 26.88,
+        "MAE": 0.057,
+        "variacion_mercado_%": 10.12
+      },
+      {
+        "mes": "2025-11",
+        "anio": 2025,
+        "trimestre": "2025-T4",
+        "n": 1943,
+        "n_entrenamiento": 78187,
+        "MAPE_%": 23.13,
+        "MAE": 0.0338,
+        "variacion_mercado_%": 22.09
+      },
+      {
+        "mes": "2025-12",
+        "anio": 2025,
+        "trimestre": "2025-T4",
+        "n": 2121,
+        "n_entrenamiento": 80167,
+        "MAPE_%": 16.25,
+        "MAE": 0.0287,
+        "variacion_mercado_%": 4.37
+      }
+    ],
+    "meses_evaluados": 48,
+    "MAPE_global_ponderado_%": 33.45,
+    "MAPE_promedio_simple_%": 43.7,
+    "MAPE_sd_%": 43.48,
+    "por_anio": {
+      "2022": {
+        "n": 15108,
+        "MAPE_%": 32.32,
+        "meses": 12
+      },
+      "2023": {
+        "n": 10457,
+        "MAPE_%": 56.58,
+        "meses": 12
+      },
+      "2024": {
+        "n": 17669,
+        "MAPE_%": 31.01,
+        "meses": 12
+      },
+      "2025": {
+        "n": 20885,
+        "MAPE_%": 24.75,
+        "meses": 12
+      }
+    },
+    "por_trimestre": {
+      "2022-T1": {
+        "n": 4821,
+        "MAPE_%": 30.24,
+        "meses": 3
+      },
+      "2022-T2": {
+        "n": 3856,
+        "MAPE_%": 23.62,
+        "meses": 3
+      },
+      "2022-T3": {
+        "n": 4143,
+        "MAPE_%": 30.52,
+        "meses": 3
+      },
+      "2022-T4": {
+        "n": 2288,
+        "MAPE_%": 54.62,
+        "meses": 3
+      },
+      "2023-T1": {
+        "n": 193,
+        "MAPE_%": 109.15,
+        "meses": 3
+      },
+      "2023-T2": {
+        "n": 1733,
+        "MAPE_%": 65.54,
+        "meses": 3
+      },
+      "2023-T3": {
+        "n": 4268,
+        "MAPE_%": 55.54,
+        "meses": 3
+      },
+      "2023-T4": {
+        "n": 4263,
+        "MAPE_%": 51.59,
+        "meses": 3
+      },
+      "2024-T1": {
+        "n": 3000,
+        "MAPE_%": 18.34,
+        "meses": 3
+      },
+      "2024-T2": {
+        "n": 4390,
+        "MAPE_%": 26.26,
+        "meses": 3
+      },
+      "2024-T3": {
+        "n": 4738,
+        "MAPE_%": 53.44,
+        "meses": 3
+      },
+      "2024-T4": {
+        "n": 5541,
+        "MAPE_%": 22.43,
+        "meses": 3
+      },
+      "2025-T1": {
+        "n": 4906,
+        "MAPE_%": 21.2,
+        "meses": 3
+      },
+      "2025-T2": {
+        "n": 4761,
+        "MAPE_%": 35.49,
+        "meses": 3
+      },
+      "2025-T3": {
+        "n": 5188,
+        "MAPE_%": 21.51,
+        "meses": 3
+      },
+      "2025-T4": {
+        "n": 6030,
+        "MAPE_%": 21.93,
+        "meses": 3
+      }
+    },
+    "por_regimen_volatilidad": {
+      "estable": {
+        "meses": 24,
+        "n": 34861,
+        "MAPE_%": 27.82,
+        "variacion_mercado_media_%": 6.08
+      },
+      "volatil": {
+        "meses": 24,
+        "n": 29258,
+        "MAPE_%": 40.15,
+        "variacion_mercado_media_%": 25.31
+      }
+    },
+    "umbral_volatilidad_%": 12.77,
+    "nota": "Origen rodante: para cada mes se reconstruye el pipeline ENTERO con la historia estrictamente anterior —umbrales de recorte de atipicos, lookup de ruta, encoders, medianas y serie mensual de mercado— llamando al mismo dp.particionar() que usa produccion, y se entrena con la misma receta. Nada se hereda del pipeline completo: la limitacion que esta etapa declaraba en rondas anteriores queda corregida, no solo documentada. Regimen volatil = meses cuya variacion del nivel de mercado supera la mediana de la serie.",
+    "relacion_con_walk_forward_2025": "ml/walk_forward.py aplica este mismo protocolo a los doce meses de 2025 y anade las comparaciones que pide la revision (modelo estatico sobre las mismas filas, coste del rezago de publicacion de SUNAT y lineas base por mes). Esta etapa cubre todo el historico, que es lo que permite hablar de error por anio y por regimen de volatilidad."
+  },
+  "outliers": {
+    "tabla": [
+      {
+        "tratamiento": "Sin tratamiento",
+        "filas_afectadas": 0,
+        "pct_afectado": 0.0,
+        "n_train": 48882,
+        "n_test": 21023,
+        "MAE": 0.0555,
+        "RMSE": 0.1235,
+        "MAPE_%": 27.85,
+        "R2": 0.0245
+      },
+      {
+        "tratamiento": "Winsorizacion P0.5-P99.5",
+        "filas_afectadas": 815,
+        "pct_afectado": 0.937,
+        "n_train": 48882,
+        "n_test": 21023,
+        "MAE": 0.0551,
+        "RMSE": 0.0773,
+        "MAPE_%": 28.17,
+        "R2": -0.0564
+      },
+      {
+        "tratamiento": "Eliminacion P0.5-P99.5 (produccion)",
+        "filas_afectadas": 815,
+        "pct_afectado": 0.937,
+        "n_train": 48378,
+        "n_test": 20891,
+        "MAE": 0.053,
+        "RMSE": 0.0738,
+        "MAPE_%": 27.66,
+        "R2": -0.1646
+      }
+    ],
+    "mape_pipeline_produccion": 27.66,
+    "nota": "Los conjuntos de test NO son identicos entre tratamientos (eliminar quita filas tambien de test), de modo que la comparacion es entre PIPELINES completos y no entre modelos sobre la misma muestra. El objetivo es verificar que la conclusion del articulo no depende de haber retirado las observaciones dificiles: la winsorizacion las conserva todas y permite una comparacion sobre el test integro."
+  },
+  "shap": {
+    "importancia_shap_test_%": {
+      "mes": 2.46,
+      "trimestre": 0.12,
+      "semana_anio": 2.58,
+      "mes_sin": 1.02,
+      "mes_cos": 4.61,
+      "mercado_lag1": 57.53,
+      "mercado_lag2": 2.3,
+      "mercado_lag3": 0.4,
+      "mercado_ma3": 15.15,
+      "puerto_freq": 1.83,
+      "importador_freq": 4.6,
+      "densidad_carga": 2.85,
+      "ratio_bruto_neto": 3.89,
+      "ruta_directa": 0.65
+    },
+    "importancia_shap_volatil_%": {
+      "mes": 3.57,
+      "trimestre": 0.08,
+      "semana_anio": 3.26,
+      "mes_sin": 0.56,
+      "mes_cos": 3.65,
+      "mercado_lag1": 54.66,
+      "mercado_lag2": 2.54,
+      "mercado_lag3": 1.7,
+      "mercado_ma3": 14.86,
+      "puerto_freq": 1.52,
+      "importador_freq": 4.31,
+      "densidad_carga": 3.82,
+      "ratio_bruto_neto": 4.48,
+      "ruta_directa": 1.0
+    },
+    "importancia_gain_%": {
+      "mes": 3.43,
+      "trimestre": 0.33,
+      "semana_anio": 0.61,
+      "mes_sin": 0.75,
+      "mes_cos": 3.01,
+      "mercado_lag1": 28.5,
+      "mercado_lag2": 4.49,
+      "mercado_lag3": 1.32,
+      "mercado_ma3": 54.66,
+      "puerto_freq": 0.35,
+      "importador_freq": 0.4,
+      "densidad_carga": 0.78,
+      "ratio_bruto_neto": 0.42,
+      "ruta_directa": 0.97
+    },
+    "figuras": [
+      "real_vs_predicho_test.png",
+      "shap_barras_test.png",
+      "shap_beeswarm_test.png",
+      "shap_dependence_mercado_lag1.png",
+      "shap_dependence_mercado_ma3.png",
+      "shap_regimen_volatil_vs_estable.png",
+      "shap_waterfall_error_alto.png",
+      "shap_waterfall_tipica.png"
+    ],
+    "nota": "La comparacion entre regimenes usa el MISMO modelo entrenado, evaluando SHAP sobre filas de 2021-2022 (alta volatilidad) y sobre test 2025 (estable). Un cambio en el reparto de importancia indica sobre que se apoya el modelo en cada regimen."
+  }
+}

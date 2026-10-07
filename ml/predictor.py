@@ -2,8 +2,15 @@
 Predictor de flete marítimo usando el modelo XGBoost entrenado.
 
 Transforma los inputs del formulario en las features del modelo, ejecuta la
-predicción, construye el intervalo de confianza 95% vía Conformalized Quantile
+predicción, construye el intervalo PREDICTIVO 95% vía Conformalized Quantile
 Regression y calcula los top-3 SHAP values con etiquetas de negocio.
+
+NOMENCLATURA. Los campos se llaman `ic95_*` por compatibilidad con el contrato
+de la API, pero lo que producen NO es un intervalo de confianza sobre un
+parámetro poblacional: es un intervalo predictivo para una observación nueva.
+Su garantía de cobertura marginal al 95% es además condicional, válida solo bajo
+intercambiabilidad entre calibración y datos futuros — hipótesis que este
+sistema declara rota. La cobertura empírica medida sobre el holdout es 97.72%.
 
 CORRECCIONES DE AUDITORÍA (2026-09) aplicadas en este archivo:
 
@@ -16,7 +23,7 @@ CORRECCIONES DE AUDITORÍA (2026-09) aplicadas en este archivo:
     puede actualizar en caliente al cerrar cada mes.
 
   · Toda predicción declara `mercado_vigente_hasta` y `meses_extrapolados`.
-    Como las tres variables de mercado concentran ~89% del gain, una cotización
+    Como las variables de mercado concentran ~89% del gain, una cotización
     muy alejada de la última observación real es estructuralmente frágil, y el
     sistema debe decirlo en vez de devolver un número sin contexto.
 
@@ -45,10 +52,13 @@ CORRECCIONES DE LA SEGUNDA AUDITORÍA (2026-09) aplicadas en este archivo:
     sustituyó por la tabla `Q(h)` de `_q_conformal()`. Ver
     ml/train_quantile_models.py, sección 3b.
 
-  · MAPE HONESTO POR RÉGIMEN. `mape_modelo` devolvía siempre el MAPE de test
-    (~22%), incluso para cotizaciones extrapoladas cuyo error esperado es el del
-    escenario congelado (~27.5%). Ahora devuelve el que corresponde al régimen
-    en el que se sirvió la predicción, y `mape_regimen` dice cuál es.
+  · MAPE HONESTO POR RÉGIMEN. `mape_modelo` devolvía siempre el MAPE del
+    holdout, incluso para cotizaciones extrapoladas, cuyo error esperado es el
+    del escenario con el mercado congelado — bajo el esquema 80/20, más del
+    doble. Ahora devuelve el que corresponde al régimen en el que se sirvió la
+    predicción, y `mape_regimen` dice cuál es. Ambos valores salen del artifact
+    (`metricas_test` y `escenario_produccion_congelado`), así que se actualizan
+    solos en cada reentrenamiento.
 
   · FECHA INVÁLIDA. Se sigue tolerando una fecha no parseable por compatibilidad
     (el schema ya la valida antes), pero ahora se declara en `advertencia` en vez
@@ -353,10 +363,46 @@ def info_artifact() -> dict:
         except OSError:
             return None
 
+    # Esquema de particion y origen rodante. Se exponen juntos y no sueltos
+    # porque el MAPE del artifact solo es interpretable sabiendo cual de los dos
+    # protocolos lo produjo: `mape_test` es el del modelo congelado sobre todo
+    # el ano de holdout (pesimista por construccion, hasta 11 meses de
+    # horizonte) y `walk_forward` el del sistema reentrenado cada mes. Un panel
+    # que muestre uno sin el otro invita a leer el peor numero como si fuera el
+    # unico, o el mejor como si describiera al artifact que hay en disco.
+    particion = MODEL_META.get("particion", {})
+    wf = MODEL_META.get("walk_forward_2025", {})
+    wf_res = wf.get("resumen", {}).get("rodante", {})
+
     return {
         "entrenado_en": _mtime(META_PATH),
         "cargado": _model is not None,
         "mape_test": MODEL_MAPE,
+        "esquema_particion": particion.get("esquema"),
+        "particion": {
+            "criterio": particion.get("criterio"),
+            "rango_train": particion.get("rango_train"),
+            "rango_val": particion.get("rango_val"),
+            "rango_holdout": particion.get("rango_test"),
+            "n_train": particion.get("n_train"),
+            "n_val": particion.get("n_val"),
+            "n_holdout": particion.get("n_test"),
+            "pct_holdout": particion.get("pct_holdout"),
+        },
+        "walk_forward": {
+            "anio": wf.get("anio_evaluado"),
+            "meses_evaluados": wf.get("meses_evaluados"),
+            "mape_ponderado": wf_res.get("MAPE_ponderado_%"),
+            "mape_sd": wf_res.get("MAPE_sd_%"),
+            "mape_min": wf_res.get("MAPE_min_%"),
+            "mape_max": wf_res.get("MAPE_max_%"),
+            "ganancia_de_reentrenar_pp": wf.get("resumen", {}).get(
+                "ganancia_de_reentrenar_pp"
+            ),
+            "coste_del_rezago_sunat_pp": wf.get("resumen", {}).get(
+                "coste_del_rezago_sunat_pp"
+            ),
+        } if wf else None,
         "n_puertos": len(PORT_FREQ),
         "n_importadores": len(IMPORTADOR_FREQ),
         "n_features": len(FEATURE_ORDER),
@@ -367,6 +413,7 @@ def info_artifact() -> dict:
             "modelo_xgboost_flete.pkl": _mtime(MODEL_PATH),
             "modelo_xgboost_flete_q_lo.pkl": _mtime(QLO_PATH),
             "modelo_xgboost_flete_q_hi.pkl": _mtime(QHI_PATH),
+            "walk_forward_2025.json": _mtime(META_PATH.parent / "walk_forward_2025.json"),
         },
     }
 
@@ -641,10 +688,10 @@ def _construir_advertencia(ctx: dict) -> Optional[str]:
         )
     if not ctx.get("ic95_calibrado", True):
         avisos.append(
-            f"El intervalo de confianza esta calibrado para extrapolaciones de "
+            f"El intervalo predictivo esta calibrado para extrapolaciones de "
             f"hasta {HORIZONTE_IC_CALIBRADO} meses; esta cotizacion esta a "
             f"{ctx['meses_extrapolados']}. El intervalo se muestra igualmente, "
-            "pero su cobertura del 95% NO esta garantizada en este horizonte."
+            "pero su cobertura del 95% NO esta calibrada en este horizonte."
         )
     if not ctx["puerto_en_historico"]:
         avisos.append("El puerto seleccionado no figura en el histórico de entrenamiento.")
@@ -732,9 +779,10 @@ def _build_result(
         })
 
     # MAPE del régimen en el que REALMENTE se sirvió esta predicción. Devolver
-    # siempre el MAPE de test (~22%) para una cotización extrapolada, cuyo error
-    # esperado es el del escenario congelado (~27.5%), era mostrarle al usuario
-    # una precisión que esa cotización no tiene.
+    # siempre el MAPE del holdout para una cotización extrapolada, cuyo error
+    # esperado es el del escenario con el mercado congelado —bajo el esquema
+    # 80/20, más del doble—, era mostrarle al usuario una precisión que esa
+    # cotización no tiene. Ambos valores salen del artifact, no de constantes.
     extrapolado = ctx["meses_extrapolados"] > 0 or ctx.get("rezagos_incompletos", False)
     # El IC solo esta calibrado dentro del historico o hasta HORIZONTE_IC_CALIBRADO
     # meses de extrapolacion hacia adelante. Fuera de ahi se sirve igualmente pero
@@ -783,7 +831,7 @@ def predict(
     """
     Retorna:
       - flete_estimado_usd: predicción total en USD
-      - ic95_min / ic95_max: intervalo de confianza 95% (CQR)
+      - ic95_min / ic95_max: intervalo predictivo 95% (CQR)
       - mape_modelo: MAPE del modelo en test
       - tiempo_ms: latencia de inferencia
       - shap_contribuciones: top-3 variables con impacto en negocio

@@ -29,6 +29,27 @@ Correcciones acumuladas respecto del pipeline original (Untitled.ipynb):
     importador/puerto/anio, fiabilidad del default de ruta, cobertura real de
     los catalogos y colapso de regimen del target entre particiones.
 
+  QUINTA REVISION — ESQUEMA DE PARTICION 80/20 (el cambio vigente):
+  - El split pasa de 70/20/10 por cuantiles posicionales a una frontera de anio
+    calendario: TRAIN = 2021-2024, HOLDOUT = todo 2025. El bloque de
+    entrenamiento se subdivide 80/20 por fecha, y la cola de esa subparticion
+    reserva su ultima mitad para la calibracion conformal, de modo que NINGUNA
+    fila de 2025 participa en ningun ajuste. Se comprueba con asserts en cada
+    ejecucion.
+  - Se RETIRA el early stopping de ventana unica: bajo este esquema elegia
+    modelos subajustados (20 arboles) y llevaba el MAPE del holdout de 27.66%
+    a 56.82%. Lo sustituye una seleccion del numero de arboles por origen
+    rodante trimestral dentro del bloque de entrenamiento
+    (ml/seleccion_iteraciones.py), y el ajuste final usa el bloque completo.
+  - El holdout pasa de 5 meses a 12: la evaluacion deja de depender del
+    regimen de mercado de un tramo corto y arbitrario.
+  - La evaluacion se completa con `ml/walk_forward.py`, que reentrena mes a mes
+    durante 2025. Las dos cifras responden preguntas distintas: el holdout de
+    este script mide cuanto cuesta NO reentrenar en un anio entero; el
+    walk-forward, el rendimiento del sistema reentrenado cada mes.
+  - El esquema anterior sigue disponible (`dp.construir(..., esquema=
+    "70_20_10")`) y su artifact esta respaldado en ml/respaldo_70_20_10/.
+
 Este script reporta ademas, de forma explicita:
   - Metricas de TRAIN y de TEST juntas (la brecha R2 train/test es el dato que
     mide cuanto memoriza el modelo, y no debe quedar fuera del informe).
@@ -56,6 +77,7 @@ from sklearn.preprocessing import StandardScaler
 from xgboost import XGBRegressor
 
 from ml import data_pipeline as dp
+from ml import seleccion_iteraciones as si
 
 # El corpus por defecto es el historico de la tesis. `JPS_CSV_PATH` permite
 # apuntar al corpus acumulativo que mantiene ml/corpus.py (base + los CSV
@@ -70,11 +92,29 @@ RANDOM_STATE = 42
 # 1. Dataset, recorte, features y particiones (logica compartida)
 # ──────────────────────────────────────────────────────────────────────────
 p = dp.construir(CSV_PATH)
+ETIQUETAS = p.etiquetas()
 
 print(dp.diagnostico_recorte(p))
-print(f"\nfe_model (con historia de lags): {len(p.train) + len(p.val) + len(p.test):,} filas")
-for name, s in [("TRAIN", p.train), ("VAL", p.val), ("TEST", p.test)]:
-    print(f"{name:5} | {len(s):>6,} filas | {s['FECHA'].min().date()} -> {s['FECHA'].max().date()}")
+_n_total = len(p.train) + len(p.val) + len(p.test)
+_n_bloque = len(p.train) + len(p.val)
+print(f"\nESQUEMA DE PARTICION: {p.esquema}")
+print(f"  {ETIQUETAS['criterio']}")
+print(f"\nfe_model (con historia de lags): {_n_total:,} filas")
+for name, s, rol in [
+    ("TRAIN", p.train, "ajuste de modelos, encoders y umbrales"),
+    ("VAL", p.val, "resto del ajuste; su ultima mitad calibra el IC (sigue siendo el 80%)"),
+    ("TEST", p.test, "HOLDOUT: la 'validacion 2025' del esquema; nunca se ajusta nada con el"),
+]:
+    print(f"{name:5} | {len(s):>6,} filas ({100*len(s)/_n_total:5.2f}%) | "
+          f"{s['FECHA'].min().date()} -> {s['FECHA'].max().date()} | {rol}")
+print(f"BLOQUE DE ENTRENAMIENTO (train+val) = {_n_bloque:,} filas "
+      f"({100*_n_bloque/_n_total:.2f}%) | HOLDOUT = {len(p.test):,} ({100*len(p.test)/_n_total:.2f}%)")
+if p.esquema == "80_20":
+    print("  El '80/20' nombra la frontera TEMPORAL que pidio la revision (2021-2024 vs")
+    print(f"  2025), no una proporcion de filas: en filas el reparto real es "
+          f"{100*_n_bloque/_n_total:.1f}/{100*len(p.test)/_n_total:.1f}, porque 2025")
+    print("  aporta mas declaraciones por mes que los anos anteriores. Se reporta el")
+    print("  numero real para que la etiqueta no se lea como una medicion.")
 print(f"cortes por fecha: train < {p.fecha_corte_train.date()} <= val < {p.fecha_corte_val.date()} <= test")
 assert p.train["FECHA"].max() < p.fecha_corte_train <= p.val["FECHA"].min()
 assert p.val["FECHA"].max() < p.fecha_corte_val <= p.test["FECHA"].min()
@@ -83,6 +123,23 @@ assert p.val["FECHA"].max() < p.fecha_corte_val <= p.test["FECHA"].min()
 assert not (set(p.train["FECHA"]) & set(p.val["FECHA"]))
 assert not (set(p.val["FECHA"]) & set(p.test["FECHA"]))
 assert not (set(p.train["FECHA"]) & set(p.test["FECHA"]))
+
+# INVARIANTE DEL ESQUEMA 80/20, comprobada y no confiada al comentario que la
+# describe: ninguna fila del anio de holdout puede estar en el bloque que
+# ajusta algo. Cubre el caso que mas facilmente se colaria en una refactor —
+# usar 2025 para early stopping "porque se llama validacion"— y que anularia
+# el valor de todas las metricas que este script publica.
+if p.esquema == "80_20":
+    _inicio_holdout = dp.INICIO_HOLDOUT_80_20
+    assert (p.train["FECHA"] < _inicio_holdout).all(), "hay filas de 2025 en TRAIN"
+    assert (p.val["FECHA"] < _inicio_holdout).all(), "hay filas de 2025 en VAL"
+    assert (p.test["FECHA"] >= _inicio_holdout).all(), "hay filas previas a 2025 en el HOLDOUT"
+    assert p.test["FECHA"].dt.year.nunique() == 1, "el holdout debe ser un solo anio"
+    assert p.test["FECHA"].dt.to_period("M").nunique() == 12, (
+        "el holdout debe cubrir los doce meses de 2025"
+    )
+    print("Invariantes del esquema 80/20 verificadas: el holdout son los 12 meses de "
+          f"{int(p.test['FECHA'].dt.year.iloc[0])} y no interviene en ningun ajuste.")
 
 # ──────────────────────────────────────────────────────────────────────────
 # 1b. Colapso de regimen del target: el dato que hace interpretable el R2
@@ -120,30 +177,76 @@ print(f"  importadores -> val: {n_unseen['importador_val']}/{len(p.val)} "
       f"test: {n_unseen['importador_test']}/{len(p.test)} ({100*n_unseen['importador_test']/len(p.test):.2f}%)")
 
 FEATURES, TARGET = dp.FEATURES, dp.TARGET
-X_train, y_train = p.train[FEATURES], p.train[TARGET]
+
+# BLOQUE = todo lo que el modelo puntual puede usar para ajustar: el 80%
+# entero. `X_train` apunta a el —y no a `p.train`— para que las metricas de
+# train, el Ridge de contraste y la linea base `mediana_train` se calculen
+# sobre las MISMAS filas que vio el modelo. Cuando el ajuste usaba solo
+# `p.train`, esta distincion no existia; ahora tiene que ser explicita o las
+# tres cifras compararian cosas distintas.
+BLOQUE = pd.concat([p.train, p.val]).sort_values("FECHA", kind="mergesort").reset_index(drop=True)
+X_train, y_train = BLOQUE[FEATURES], BLOQUE[TARGET]
 X_val, y_val = p.val[FEATURES], p.val[TARGET]
 X_test, y_test = p.test[FEATURES], p.test[TARGET]
 
 # ──────────────────────────────────────────────────────────────────────────
-# 2. Entrenamiento (hiperparametros del notebook, con early stopping)
-#    Nota: el early stopping del modelo PUNTUAL usa VAL completo. Eso es
-#    legitimo porque el modelo puntual no interviene en la construccion del
-#    intervalo; los modelos de cuantiles, que si la construyen, hacen early
-#    stopping solo con VAL_ES y dejan VAL_CAL intacto para la calibracion.
+# 2. Entrenamiento
+#
+#    QUINTA REVISION — SE RETIRA EL EARLY STOPPING DE VENTANA UNICA. Con el
+#    esquema 80/20 la cola del bloque de entrenamiento (2024-H2) esta en el
+#    MISMO nivel de mercado que el bloque, asi que el early stopping premiaba
+#    al modelo subajustado —20 arboles, predicciones pegadas a la mediana— y
+#    ese modelo colapsaba sobre 2025: MAPE 56.74% frente al 25.07% de no
+#    seleccionar nada. El numero de arboles lo fija ahora un origen rodante
+#    trimestral DENTRO del bloque de entrenamiento (ml/seleccion_iteraciones.py),
+#    que promedia sobre todos los trimestres elegibles en vez de fiarlo a una
+#    sola ventana. Ningun pliegue toca el holdout.
+#
+#    El ajuste final usa el BLOQUE COMPLETO (train + val): una vez que el
+#    numero de arboles no lo decide `val`, no hay razon para excluir sus siete
+#    meses del ajuste, y son los mas cercanos al periodo que se predice. Los
+#    modelos de CUANTILES si siguen ajustandose solo con `train`, porque su
+#    calibracion conformal exige que val_cal permanezca no visto.
 # ──────────────────────────────────────────────────────────────────────────
-model = XGBRegressor(
-    n_estimators=600,
+_HP_BASE = dict(
     learning_rate=0.05,
     max_depth=6,
     subsample=0.8,
     colsample_bytree=0.8,
     random_state=RANDOM_STATE,
     n_jobs=-1,
-    early_stopping_rounds=40,
+    objective="reg:absoluteerror",
     eval_metric="mae",
 )
-model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
-print(f"\nMejor iteracion (early stopping): {model.best_iteration}")
+
+print("\nSeleccion del numero de arboles (origen rodante trimestral interno):")
+N_ESTIMATORS, diag_n_estimators = si.seleccionar_n_estimators(
+    BLOQUE, lambda n: XGBRegressor(n_estimators=n, **_HP_BASE),
+)
+
+model = XGBRegressor(
+    n_estimators=N_ESTIMATORS,
+    learning_rate=0.05,
+    max_depth=6,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    random_state=RANDOM_STATE,
+    n_jobs=-1,
+    # CUARTA AUDITORIA. El objetivo era el cuadratico por defecto mientras que
+    # la metrica de seleccion, de early stopping y de reporte es el error
+    # ABSOLUTO: el modelo optimizaba una funcion distinta de la que se le mide.
+    # Alinearlas mejora el MAPE de test de 23.22% a 21.63% (medias de 5
+    # semillas; delta -1.59 pp, IC95 bootstrap pareado [-1.85, -1.35]).
+    # Medido en ml/estudios_paper.py -> resultados.json["modelos"], donde se
+    # entrenan ambas perdidas para XGBoost, LightGBM y CatBoost: la perdida
+    # explica tanta diferencia como el algoritmo.
+    objective="reg:absoluteerror",
+    eval_metric="mae",
+)
+model.fit(BLOQUE[FEATURES], BLOQUE[TARGET], verbose=False)
+print(f"\nAjuste final: {N_ESTIMATORS} arboles sobre el bloque completo "
+      f"({len(BLOQUE):,} filas, {BLOQUE['FECHA'].min().date()} -> "
+      f"{BLOQUE['FECHA'].max().date()})")
 
 
 def evaluar(y_true, y_pred) -> dict:
@@ -334,17 +437,19 @@ print(f"  salto entre semanas consecutivas: mediana {sens['salto_entre_semanas_m
 #     recalculan en cada ejecucion y se guardan en el artifact, de modo que la
 #     prosa no pueda volver a divergir del codigo.
 # ──────────────────────────────────────────────────────────────────────────
-def _reentrenar(feats, tr=None, va=None, te=None) -> dict:
-    """Reentrena con los MISMOS hiperparametros y evalua en test."""
-    tr = p.train if tr is None else tr
-    va = p.val if va is None else va
+def _reentrenar(feats, bloque=None, te=None) -> dict:
+    """Reentrena con la MISMA receta que el modelo servido y evalua en holdout.
+
+    Misma receta significa: mismos hiperparametros, mismo numero de arboles y
+    mismo bloque de ajuste. Si una ablacion usara otra receta, su delta
+    mezclaria el efecto de la feature con el del procedimiento y no seria
+    interpretable — que es justo lo que la tercera auditoria encontro roto en
+    las cifras publicadas de `semana_anio`.
+    """
+    bloque = BLOQUE if bloque is None else bloque
     te = p.test if te is None else te
-    m = XGBRegressor(
-        n_estimators=600, learning_rate=0.05, max_depth=6, subsample=0.8,
-        colsample_bytree=0.8, random_state=RANDOM_STATE, n_jobs=-1,
-        early_stopping_rounds=40, eval_metric="mae",
-    )
-    m.fit(tr[feats], tr[TARGET], eval_set=[(va[feats], va[TARGET])], verbose=False)
+    m = XGBRegressor(n_estimators=N_ESTIMATORS, **_HP_BASE)
+    m.fit(bloque[feats], bloque[TARGET], verbose=False)
     return evaluar(te[TARGET], m.predict(te[feats]))
 
 
@@ -359,15 +464,18 @@ ablacion_semana = {
     "delta_R2": round(_sin_semana["R2"] - metrics_test["R2"], 4),
     "decision": "conservar",
     "nota": (
-        "CORRECCION DE LA TERCERA AUDITORIA. La segunda publico 'MAPE 22.23% -> "
-        "23.34%, R2 -0.018 -> -0.447' y concluyo que la feature aportaba senal. "
-        "Esas cifras no reproducen con ninguna configuracion. Medido aqui: "
-        "quitar semana_anio MEJORA el MAPE y empeora un R2 que el propio "
-        "informe declara inestable (§15.5). La justificacion honesta para "
-        "conservarla es la continuidad con el pipeline original y el R2, NO que "
-        "'aporta senal': sobre el MAPE, que es la metrica interpretable de este "
-        "trabajo, la feature es indiferente o levemente perjudicial. Su "
-        "sensibilidad (ver sensibilidad_semana_anio) es el argumento en contra."
+        "Medicion recalculada en cada ejecucion; el signo depende del periodo de "
+        "evaluacion y por eso no puede vivir en prosa. Historia: la segunda "
+        "auditoria publico 'MAPE 22.23% -> 23.34%' y concluyo que la feature "
+        "aportaba senal; esas cifras no reprodujeron. La tercera, bajo el "
+        "esquema 70/20/10, midio que quitarla MEJORABA el MAPE y la califico de "
+        "indiferente. Bajo el esquema 80/20, con un holdout de doce meses en vez "
+        "de cinco, quitarla lo EMPEORA. Tres rondas, tres resultados, el mismo "
+        "codigo: lo que esto demuestra no es que la feature aporte o no aporte, "
+        "sino que su efecto no es estable entre periodos y que ninguna de las "
+        "tres cifras debe citarse como una propiedad del modelo. Se conserva por "
+        "continuidad con el pipeline original; el argumento en contra sigue "
+        "siendo su sensibilidad (ver sensibilidad_semana_anio), no su aporte."
     ),
 }
 print(f"  ablacion semana_anio : MAPE {metrics_test['MAPE_%']:.2f} -> "
@@ -386,7 +494,7 @@ def _clip(d):
     return d
 
 
-_colas = _reentrenar(FEATURES, _clip(p.train), _clip(p.val), _clip(p.test))
+_colas = _reentrenar(FEATURES, _clip(BLOQUE), _clip(p.test))
 ablacion_colas = {
     "limites_p99_aplicados": {k: round(v, 4) for k, v in _lims.items()},
     "sin_recorte": {k: round(v, 4) for k, v in metrics_test.items()},
@@ -475,6 +583,24 @@ meta["metricas_test"] = {k2: round(v, 4) if k2 != "MAPE_%" else round(v, 2)
                          for k2, v in metrics_test.items()}
 meta["metricas_train"] = {k2: round(v, 4) if k2 != "MAPE_%" else round(v, 2)
                           for k2, v in metrics_train.items()}
+# Alias explicito. `metricas_test` es la clave que consume todo el sistema
+# (predictor, dashboard) y se conserva por compatibilidad, pero en el esquema
+# 80/20 lo que contiene es el holdout de 2025 — la "validacion" del enunciado.
+# Publicar el mismo numero con el nombre que le corresponde evita que alguien
+# lea "test" como un tercer conjunto que ya no existe.
+meta["metricas_holdout"] = {
+    **meta["metricas_test"],
+    "conjunto": ETIQUETAS["test"],
+    "periodo": [str(p.test["FECHA"].min().date()), str(p.test["FECHA"].max().date())],
+    "n": len(p.test),
+    "nota": (
+        "Es el MAPE de un modelo congelado en el ultimo dia del bloque de "
+        "entrenamiento evaluado sobre los doce meses siguientes, asi que "
+        "incorpora hasta 11 meses de horizonte y es DELIBERADAMENTE pesimista "
+        "respecto de como opera el sistema reentrenado. La cifra que describe "
+        "la operacion mensual es la del walk-forward: ver walk_forward_2025."
+    ),
+}
 meta["lineas_base_test"] = {
     k: {k2: round(v, 4) if k2 != "MAPE_%" else round(v, 2) for k2, v in m.items()}
     for k, m in metrics_baselines.items()
@@ -524,6 +650,23 @@ meta["diagnostico_generalizacion"] = {
         "de test es practicamente igual a la desviacion estandar del propio test."
     ),
 }
+meta["seleccion_n_estimators"] = diag_n_estimators
+meta["receta_entrenamiento"] = {
+    "bloque_de_ajuste": "train + val (el 80% completo)",
+    "n_filas_ajuste": len(BLOQUE),
+    "rango_ajuste": [str(BLOQUE["FECHA"].min().date()), str(BLOQUE["FECHA"].max().date())],
+    "n_estimators": N_ESTIMATORS,
+    "hiperparametros": {k: v for k, v in _HP_BASE.items() if k != "n_jobs"},
+    "early_stopping": False,
+    "nota": (
+        "El early stopping de ventana unica se retiro en la quinta revision: "
+        "con el esquema 80/20 elegia 20 arboles y llevaba el MAPE del holdout "
+        "de 27.66% a 56.82%, porque la ventana de validacion interna esta en el "
+        "mismo nivel de mercado que el bloque de entrenamiento y ahi gana el "
+        "modelo pegado a la mediana. Lo sustituye la seleccion por origen "
+        "rodante trimestral interno: ver seleccion_n_estimators."
+    ),
+}
 meta["sensibilidad_semana_anio"] = sens
 meta["ablacion_semana_anio"] = ablacion_semana
 meta["ablacion_colas_features"] = ablacion_colas
@@ -541,13 +684,32 @@ meta["diagnostico_ruta_default"] = p.diag_ruta_default
 meta["cobertura_catalogos"] = cobertura
 meta["nota_ley_29733"] = dp.NOTA_LEY_29733
 meta["particion"] = {
+    "esquema": p.esquema,
     "criterio": "temporal por FECHA (ningun dia repartido entre particiones)",
+    **ETIQUETAS,
     "fecha_corte_train": str(p.fecha_corte_train.date()),
     "fecha_corte_val": str(p.fecha_corte_val.date()),
     "n_train": len(p.train), "n_val": len(p.val), "n_test": len(p.test),
+    "n_bloque_entrenamiento": _n_bloque,
+    "pct_bloque_entrenamiento": round(100 * _n_bloque / _n_total, 2),
+    "pct_holdout": round(100 * len(p.test) / _n_total, 2),
+    "rango_train": [str(p.train["FECHA"].min().date()), str(p.train["FECHA"].max().date())],
+    "rango_val": [str(p.val["FECHA"].min().date()), str(p.val["FECHA"].max().date())],
+    "rango_test": [str(p.test["FECHA"].min().date()), str(p.test["FECHA"].max().date())],
     "salvedad": (
-        "Ningun DIA se reparte entre particiones. El MES en que VAL termina y "
-        "TEST empieza si es compartido, y el mes es la unidad de mercado_lag*."
+        "Ningun DIA se reparte entre particiones. En el esquema 80_20 la "
+        "frontera que separa entrenamiento de holdout es un limite de anio "
+        "calendario, asi que tampoco se reparte ningun MES — que es la unidad "
+        "en la que operan mercado_lag*. Subsiste a mitad de mes la frontera "
+        "INTERNA train/val, que no afecta al holdout."
+    ),
+    "nota_proporcion": (
+        "La etiqueta '80/20' nombra la frontera temporal pedida por la revision "
+        "(train 2021-2024, validacion todo 2025), no una proporcion de filas. En "
+        f"filas el reparto real es {round(100 * _n_bloque / _n_total, 1)}/"
+        f"{round(100 * len(p.test) / _n_total, 1)}: 2025 aporta mas declaraciones "
+        "por mes que los anos anteriores. Se publica el numero real para que la "
+        "etiqueta no se lea como una medicion."
     ),
 }
 meta["nota"] = (

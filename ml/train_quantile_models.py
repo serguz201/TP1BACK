@@ -4,12 +4,22 @@ Quantile Regression (CQR, Romano, Patterson & Candes 2019).
 
 Diseno (cada dato con un unico proposito):
 
-  TRAIN     -> ajusta 2 modelos XGBoost de cuantiles (q=2.5% y q=97.5%).
-  VAL_ES    -> early stopping de esos dos modelos. Nada mas.
-  VAL_CAL   -> calibracion conformal. Nunca entrena ni hace early stopping.
-  TEST      -> evaluacion final. Nunca tocado antes.
+  TRAIN + VAL_ES -> ajustan 2 modelos XGBoost de cuantiles (q=2.5% y q=97.5%).
+  VAL_CAL        -> calibracion conformal. No participa en ningun ajuste.
+  TEST           -> holdout (todo 2025). Nunca tocado antes.
 
-Las cuatro particiones salen de ml/data_pipeline.py, el mismo modulo que usa
+QUINTA REVISION — DOS CAMBIOS, Y CONVIENE NO CONFUNDIRLOS:
+
+  1. El esquema de particion pasa a 80/20 (TRAIN = 2021-2024, HOLDOUT = todo
+     2025). VAL_ES y VAL_CAL son las dos mitades de la cola del 80%, asi que
+     siguen siendo datos de 2024: la calibracion conformal no toca 2025.
+  2. Se retira el early stopping, que con este esquema elegia modelos
+     subajustados (ver ml/seleccion_iteraciones.py). VAL_ES pierde con ello su
+     unica funcion y pasa a ser masa de entrenamiento. VAL_CAL sigue apartado,
+     porque eso no lo pedia el early stopping sino la garantia de CQR, que
+     exige calibrar sobre datos no vistos por los modelos de cuantiles.
+
+Las particiones salen de ml/data_pipeline.py, el mismo modulo que usa
 train_model.py: modelo puntual y modelos de cuantiles comparten por
 construccion el dataset, el recorte, los encoders y las fronteras temporales.
 
@@ -74,9 +84,11 @@ import os
 
 import joblib
 import numpy as np
+import pandas as pd
 from xgboost import XGBRegressor
 
 from ml import data_pipeline as dp
+from ml import seleccion_iteraciones as si
 
 # El corpus por defecto es el historico de la tesis. `JPS_CSV_PATH` permite
 # apuntar al corpus acumulativo que mantiene ml/corpus.py (base + los CSV
@@ -114,34 +126,67 @@ if meta.get("features") != dp.FEATURES or meta.get("puerto_freq_default") != p.p
     )
 
 FEATURES = dp.FEATURES
-X_train, y_train = p.train[FEATURES], p.train[dp.TARGET]
+
+# QUINTA REVISION. Con el early stopping retirado (ver el docstring de
+# ml/seleccion_iteraciones.py), VAL_ES deja de tener una funcion propia: era el
+# conjunto contra el que se paraba el ajuste. Pasa a ser masa de entrenamiento.
+#
+# Lo que NO cambia, y es la razon de que VAL_CAL siguiera existiendo aparte: la
+# garantia de CQR exige que la calibracion se haga sobre datos que los modelos
+# de cuantiles no han visto. VAL_CAL sigue intacto, y ahora los cuantiles se
+# ajustan con mas datos y mas cercanos al periodo que se predice.
+BLOQUE_Q = pd.concat([p.train, val_es]).sort_values("FECHA", kind="mergesort").reset_index(drop=True)
+X_train, y_train = BLOQUE_Q[FEATURES], BLOQUE_Q[dp.TARGET]
 X_val_es, y_val_es = val_es[FEATURES], val_es[dp.TARGET]
 X_val_cal, y_val_cal = val_cal[FEATURES], val_cal[dp.TARGET]
 X_test, y_test = p.test[FEATURES], p.test[dp.TARGET]
+print(f"BLOQUE DE AJUSTE DE CUANTILES (train + val_es) | {len(BLOQUE_Q):,} filas | "
+      f"{BLOQUE_Q['FECHA'].min().date()} -> {BLOQUE_Q['FECHA'].max().date()}")
+assert BLOQUE_Q["FECHA"].max() < val_cal["FECHA"].min(), (
+    "el bloque de ajuste de cuantiles no puede solaparse con VAL_CAL"
+)
+assert val_cal["FECHA"].max() < p.test["FECHA"].min(), (
+    "la calibracion conformal no puede tocar el holdout"
+)
 
 # ──────────────────────────────────────────────────────────────────────────
-# 2. Modelos de cuantiles: ajustados SOLO con train, early stopping SOLO val_es
+# 2. Modelos de cuantiles: ajustados con train+val_es, VAL_CAL intacto
+#
+#    El numero de arboles se elige por origen rodante trimestral dentro del
+#    bloque de ajuste, con la perdida de CADA cuantil —no con el MAE del modelo
+#    puntual—, porque un cuantil al 2.5% y otro al 97.5% no tienen por que
+#    necesitar la misma capacidad. Se seleccionan por separado y el artifact
+#    registra ambos.
 # ──────────────────────────────────────────────────────────────────────────
+_HP_Q = dict(
+    objective="reg:quantileerror",
+    learning_rate=0.05,
+    max_depth=6,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    random_state=RANDOM_STATE,
+    n_jobs=-1,
+)
+
+seleccion_q = {}
+
+
 def fit_quantile(alpha: float) -> XGBRegressor:
-    m = XGBRegressor(
-        objective="reg:quantileerror",
-        quantile_alpha=alpha,
-        n_estimators=600,
-        learning_rate=0.05,
-        max_depth=6,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        random_state=RANDOM_STATE,
-        n_jobs=-1,
-        early_stopping_rounds=40,
+    etiqueta = f"q={alpha:.3f}"
+    print(f"\n  Seleccion del numero de arboles para {etiqueta}:")
+    n, diag = si.seleccionar_n_estimators(
+        BLOQUE_Q,
+        lambda k: XGBRegressor(n_estimators=k, quantile_alpha=alpha, **_HP_Q),
     )
-    m.fit(X_train, y_train, eval_set=[(X_val_es, y_val_es)], verbose=False)
+    seleccion_q[etiqueta] = diag
+    m = XGBRegressor(n_estimators=n, quantile_alpha=alpha, **_HP_Q)
+    m.fit(X_train, y_train, verbose=False)
     return m
 
 
 model_lo = fit_quantile(ALPHA / 2)
 model_hi = fit_quantile(1 - ALPHA / 2)
-print(f"\nq_lo best_iteration={model_lo.best_iteration} | q_hi best_iteration={model_hi.best_iteration}")
+print(f"\nq_lo n_estimators={model_lo.n_estimators} | q_hi n_estimators={model_hi.n_estimators}")
 
 
 def conformal_Q(scores: np.ndarray, alpha: float = ALPHA) -> tuple[float, int, int]:
@@ -169,7 +214,48 @@ def conformal_Q(scores: np.ndarray, alpha: float = ALPHA) -> tuple[float, int, i
 q_lo_cal = model_lo.predict(X_val_cal)
 q_hi_cal = model_hi.predict(X_val_cal)
 scores = np.maximum(q_lo_cal - y_val_cal.values, y_val_cal.values - q_hi_cal)
-Q, n_cal, k = conformal_Q(scores)
+Q_cqr_crudo, n_cal, k = conformal_Q(scores)
+
+# ──────────────────────────────────────────────────────────────────────────
+# SUELO EN CERO: LA CALIBRACION PUEDE ENSANCHAR EL INTERVALO, NUNCA ENCOGERLO.
+#
+# Con la particion temporal por ano calendario la Q conformal sale NEGATIVA
+# (-0.06122). No es un error de calculo: significa que sobre VAL_CAL los modelos
+# de cuantiles ya sobre-cubren (97.57% frente al 95% nominal), y CQR, que busca
+# la cobertura exacta, corrige ESTRECHANDO. Estrechar es legitimo bajo la
+# hipotesis de exchangeability entre calibracion y datos futuros — y esa
+# hipotesis es justamente la que este trabajo declara rota desde la primera
+# auditoria: el nivel del mercado cae un orden de magnitud entre periodos.
+#
+# Verificado DESPUES de fijar la regla: sobre el holdout, aplicar la Q negativa
+# llevaria la cobertura del 97.72% que dan los cuantiles crudos al 74.44%, bajo
+# una etiqueta que dice 95%. Es exactamente el defecto que la tercera auditoria
+# corrigio en el regimen extrapolado ("un intervalo etiquetado 95% que cubre el
+# 18% no es ancho, es falso"), reaparecido por el otro extremo. Las dos cifras
+# viven en `modelo_meta.json -> ic95_diagnostico.suelo_cero`; no se escriben a
+# mano aqui, y la cuarta auditoria corrigio los valores obsoletos que este
+# comentario arrastraba del esquema 70/20/10 (-0.04873, 97.60% -> 81.11%).
+#
+# La regla adoptada no se elige mirando el holdout, sino por la asimetria del
+# problema: la garantia de CQR es unilateral (cobertura >= 1-alfa) y solo vale
+# bajo exchangeability. Cuando la exchangeability esta documentadamente rota,
+# la parte de la correccion que ENSANCHA sigue siendo prudente y la que ENCOGE
+# pasa a apoyarse enteramente en la hipotesis que se sabe falsa. Se conserva la
+# primera y se descarta la segunda. Con Q = 0 el intervalo servido es el de los
+# cuantiles crudos, cuya cobertura es >= 95% tanto en VAL_CAL como en el
+# holdout, asi que el suelo solo puede hacer el intervalo mas conservador.
+#
+# Ambos valores se publican en el artifact: `ic95_conformal_Q` es el servido y
+# `ic95_conformal_Q_cqr_crudo` el que da la formula sin suelo, para que el
+# lector pueda reconstruir la decision en vez de tener que creerla.
+Q = max(Q_cqr_crudo, 0.0)
+_suelo_aplicado = Q_cqr_crudo < 0
+if _suelo_aplicado:
+    print(f"\nAVISO: la Q conformal cruda es NEGATIVA ({Q_cqr_crudo:.5f}): la "
+          "calibracion pedia ESTRECHAR el intervalo.")
+    print("  Se aplica suelo en 0 (la calibracion puede ensanchar, nunca encoger) "
+          "porque estrechar")
+    print("  descansa por completo en una exchangeability que este trabajo declara rota.")
 print(f"\nCalibracion conformal (regimen historico): n_cal={n_cal} | k={k} | Q={Q:.5f}")
 
 n_cross = int((q_hi_cal < q_lo_cal).sum())
@@ -239,12 +325,21 @@ def congelar_por_horizonte(X, periodos, h):
 
 print()
 print(f"Calibracion conformal del regimen extrapolado: Q(h) para h=1..{H_MAX}")
-_Q_cruda, Q_por_horizonte, cobertura_por_horizonte = {}, {}, {}
+_Q_cruda, _Q_sin_suelo, Q_por_horizonte, cobertura_por_horizonte = {}, {}, {}, {}
 _acum = 0.0
 for _h in range(1, H_MAX + 1):
     _X = congelar_por_horizonte(X_val_cal, _per_cal, _h)
     _a, _b = model_lo.predict(_X), model_hi.predict(_X)
     _q, _, _ = conformal_Q(np.maximum(_a - y_val_cal.values, y_val_cal.values - _b))
+    # Se guardan las dos versiones y cada una tiene su uso:
+    #   `_Q_sin_suelo` es la ESTIMACION, y es la que alimenta el diagnostico de
+    #     hasta que horizonte la tabla sigue informada por datos (mas abajo).
+    #     Recortarla ahi destruiria justo la senal que ese diagnostico lee.
+    #   `_Q_cruda` es lo que se SIRVE, con el mismo suelo en cero que la Q
+    #     historica y por el mismo motivo: la calibracion puede ensanchar el
+    #     intervalo, nunca estrecharlo por debajo del de los cuantiles crudos.
+    _Q_sin_suelo[_h] = _q
+    _q = max(_q, 0.0)
     _Q_cruda[_h] = _q
     _acum = max(_acum, _q)              # monotonizacion por maximo acumulado
     Q_por_horizonte[_h] = _acum
@@ -279,7 +374,7 @@ TOLERANCIA_INVERSION = 0.10
 H_DECLARADO = 1
 _max_visto = 0.0
 for _h in range(1, H_MAX + 1):
-    _q = _Q_cruda[_h]
+    _q = _Q_sin_suelo[_h]
     if _max_visto > 0 and _q < _max_visto * (1 - TOLERANCIA_INVERSION):
         break
     _max_visto = max(_max_visto, _q)
@@ -287,6 +382,23 @@ for _h in range(1, H_MAX + 1):
 
 # `Q_extrapolado` se conserva como escalar por compatibilidad del artifact: es el
 # valor de la tabla en el horizonte que el sistema declara como referencia.
+# TABLA INERTE. Si el suelo en cero deja Q(h) plana —porque los cuantiles
+# crudos ya sobre-cubren en todos los horizontes—, la tabla no distingue un
+# horizonte de otro y seria falso declarar que "calibra" hasta h=41. En ese caso
+# el horizonte declarado se limita al de referencia, que es el unico para el que
+# hay una lectura defendible, y el artifact marca la tabla como inerte para que
+# la respuesta del sistema pueda decirlo.
+TABLA_INERTE = len({round(v, 9) for v in Q_por_horizonte.values()}) == 1
+if TABLA_INERTE:
+    H_DECLARADO = min(6, H_DECLARADO)
+    print("  AVISO: con el suelo en cero la tabla Q(h) queda PLANA: los cuantiles "
+          "crudos ya")
+    print("  sobre-cubren en todos los horizontes estimables, asi que la tabla no "
+          "ensancha nada.")
+    print("  No se declara calibracion mas alla del horizonte de referencia: una "
+          "tabla que no")
+    print("  distingue h=1 de h=41 no puede sostener una afirmacion sobre h=41.")
+
 H_CAL = min(6, H_DECLARADO)
 Q_extrap = Q_por_horizonte[H_CAL]
 _muestra = [1, 2, 3, 6, 9, 12, 24, 36, H_MAX]
@@ -300,11 +412,12 @@ print(f"  (con la constante unica de la segunda auditoria bajaba al 17.9% a h=9)
 assert _min_cob >= 95.0 - 1e-9, (
     f"la monotonizacion debe garantizar >=95% en cada horizonte; minimo {_min_cob}"
 )
-print(f"  Q de referencia (h={H_CAL}): {Q_extrap:.5f} ({Q_extrap / Q:.2f}x la Q historica)")
+print(f"  Q de referencia (h={H_CAL}): {Q_extrap:.5f}"
+      + (f" ({Q_extrap / Q:.2f}x la Q historica)" if Q > 0 else " (la Q historica es 0)"))
 print(f"  HORIZONTE DECLARADO CALIBRADO: {H_DECLARADO} meses (de {H_MAX} estimables).")
 print(f"    La Q cruda se ordena hasta h={H_DECLARADO} y a partir de h={H_DECLARADO + 1} "
-      f"se invierte ({_Q_cruda.get(H_DECLARADO, 0):.4f} -> "
-      f"{_Q_cruda.get(H_DECLARADO + 1, float('nan')):.4f}): deja de estar informada")
+      f"se invierte ({_Q_sin_suelo.get(H_DECLARADO, 0):.4f} -> "
+      f"{_Q_sin_suelo.get(H_DECLARADO + 1, float('nan')):.4f}): deja de estar informada")
 print(f"    por datos nuevos. Mas alla de h={H_DECLARADO} el intervalo se sirve igual")
 print(f"    (con Q monotonizada) pero la respuesta marca ic95_calibrado=false.")
 
@@ -363,9 +476,18 @@ diag_test_prod = evaluar_intervalo(
 )
 
 desvio = diag_test["cobertura_%"] - 100 * (1 - ALPHA)
+meta_cob_cruda = 100 * float((
+    (y_test.values >= model_lo.predict(X_test) - Q_cqr_crudo)
+    & (y_test.values <= model_hi.predict(X_test) + Q_cqr_crudo)
+).mean())
 print(f"\n=== LECTURA DE LA COBERTURA ===")
 print(f"VAL_CAL {diag_cal['cobertura_%']:.2f}% -> la calibracion conformal es correcta.")
 print(f"TEST    {diag_test['cobertura_%']:.2f}% -> desvio de {desvio:+.2f} pp respecto del 95%.")
+if _suelo_aplicado:
+    print("Ambas cifras se miden con la Q servida (suelo en cero). Con la Q cruda de")
+    print(f"CQR ({Q_cqr_crudo:.5f}, negativa) la cobertura del holdout caeria al "
+          f"{meta_cob_cruda:.2f}%: ese es el")
+    print("defecto que el suelo evita, y es la razon de que el desvio sea POSITIVO aqui.")
 print("El desvio NO es un margen de seguridad deliberado. Parte es ruptura de")
 print("exchangeability por cambio de regimen; parte es mala especificacion de los")
 print("modelos de cuantiles (ver el desglose por cola abajo). En otro periodo el")
@@ -402,17 +524,15 @@ espec["nota"] = (
     "P(y > q_hi) muy por debajo de su nominal 2.5% YA EN VAL_CAL (antes de "
     "cualquier cambio de regimen) indica que el modelo de cuantil superior esta "
     "mal especificado, no solo que la exchangeability se rompio. Causa: los "
-    "cuantiles se ajustan sobre un train cuya dispersion es ~7x la de test y "
-    "arrastran esa amplitud. Consecuencia: el ancho de ~1.9x la mediana NO es "
-    "'la dispersion real del flete unitario en el mercado', sino una propiedad "
-    "del metodo. CORRECCION DE LA TERCERA AUDITORIA: la segunda concluyo de ahi "
-    "que era 'trabajo futuro corregible' y nombro un remedio (ponderar "
-    "temporalmente el ajuste de los cuantiles) SIN medirlo. Medido — ver "
-    "ic95_diagnostico.ponderacion_temporal — ese remedio no funciona: con "
-    "half-life de 1 anio empeora el ancho y con 6 meses lo baja un 6% mientras "
-    "triplica Q. El ancho se declara por tanto como LIMITACION ESTRUCTURAL de "
-    "este enfoque sobre estos datos. Que la causa este bien diagnosticada no "
-    "implica que se sepa corregir."
+    "cuantiles se ajustan sobre un bloque cuya dispersion es ~5.7x la del "
+    "holdout y arrastran esa amplitud. Consecuencia: el ancho del intervalo es "
+    "una propiedad del METODO, no 'la dispersion real del flete unitario en el "
+    "mercado'. La misma mala especificacion es la que hace que la Q conformal "
+    "salga NEGATIVA y obligue al suelo en cero (ver 'suelo_cero'): si los "
+    "cuantiles ya sobre-cubren, CQR corrige estrechando. Sobre si el ancho es "
+    "corregible, la etiqueta la fija la medicion de cada ejecucion y no este "
+    "texto: ver 'ponderacion_temporal', cuyo veredicto ha cambiado entre "
+    "esquemas y por eso no se escribe aqui a mano."
 )
 print(f"Q asimetrica: Q_lo={Q_lo_asim:+.5f} | Q_hi={Q_hi_asim:+.5f}"
       f"{'  <- NEGATIVA: q_hi sobrepasa el cuantil empirico' if Q_hi_asim < 0 else ''}")
@@ -433,7 +553,7 @@ if diag_test["ancho_relativo"] >= 1.0:
 # ──────────────────────────────────────────────────────────────────────────
 print()
 print("=== EL ANCHO: ES CORREGIBLE? PONDERACION TEMPORAL DE LOS CUANTILES ===")
-_edad_anios = (p.train["FECHA"].max() - p.train["FECHA"]).dt.days.values / 365.25
+_edad_anios = (BLOQUE_Q["FECHA"].max() - BLOQUE_Q["FECHA"]).dt.days.values / 365.25
 _ancho_base = diag_test["ancho_relativo"]
 ponderacion = {"sin_ponderar": {"ancho_relativo": _ancho_base,
                                 "cobertura_%": diag_test["cobertura_%"],
@@ -442,17 +562,21 @@ for _hl in (1.0, 0.5):
     _w = 0.5 ** (_edad_anios / _hl)
     _ms = {}
     for _a in (ALPHA / 2, 1 - ALPHA / 2):
-        _m = XGBRegressor(
-            objective="reg:quantileerror", quantile_alpha=_a, n_estimators=600,
-            learning_rate=0.05, max_depth=6, subsample=0.8, colsample_bytree=0.8,
-            random_state=RANDOM_STATE, n_jobs=-1, early_stopping_rounds=40,
-        )
-        _m.fit(X_train, y_train, sample_weight=_w,
-               eval_set=[(X_val_es, y_val_es)], verbose=False)
+        # Misma receta que los modelos servidos (mismo numero de arboles, sin
+        # early stopping): la unica diferencia con el ajuste base debe ser la
+        # ponderacion, o el experimento no mediria la ponderacion.
+        _n_ref = (model_lo if _a < 0.5 else model_hi).n_estimators
+        _m = XGBRegressor(n_estimators=_n_ref, quantile_alpha=_a, **_HP_Q)
+        _m.fit(X_train, y_train, sample_weight=_w, verbose=False)
         _ms[_a] = _m
     _L, _H = _ms[ALPHA / 2], _ms[1 - ALPHA / 2]
     _Qw, _, _ = conformal_Q(np.maximum(_L.predict(X_val_cal) - y_val_cal.values,
                                        y_val_cal.values - _H.predict(X_val_cal)))
+    # Mismo suelo en cero que el ajuste base. Sin el, la variante ponderada
+    # conseguiria su ancho menor estrechando el intervalo por la via que se
+    # acaba de descartar, y la comparacion mediria la regla de calibracion en
+    # vez de la ponderacion, que es lo que este experimento pretende medir.
+    _Qw = max(_Qw, 0.0)
     _a_t = _L.predict(X_test) - _Qw
     _b_t = _H.predict(X_test) + _Qw
     ponderacion[f"half_life_{_hl}_anios"] = {
@@ -469,20 +593,34 @@ _mejor = min(v["ancho_relativo"] for k, v in ponderacion.items() if k != "sin_po
 _funciona = _mejor < 0.85 * _ancho_base
 ponderacion["veredicto"] = "corregible" if _funciona else "no corregible por esta via"
 ponderacion["nota"] = (
-    "Resultado medido, no afirmado. La ponderacion temporal del ajuste de los "
-    f"cuantiles lleva el ancho relativo de {_ancho_base:.2f}x a {_mejor:.2f}x en el "
-    "mejor caso, y con half-life de 1 anio lo EMPEORA. No es el remedio que la "
-    "segunda auditoria supuso. En consecuencia el ancho vuelve a declararse como "
-    "LIMITACION ESTRUCTURAL de este enfoque sobre estos datos, no como trabajo "
-    "futuro con solucion conocida. La causa de fondo — cuantiles ajustados sobre "
-    "un train cuya dispersion es ~7x la de test — es real y esta bien "
-    "diagnosticada, pero reponderar no la resuelve: al bajar el peso del pasado "
-    "se pierde la masa de datos que sostiene las colas y Q crece para compensar. "
-    "Una solucion tendria que normalizar el target por el nivel de mercado y "
-    "reformular el problema, que es un cambio de modelo, no un ajuste."
+    f"Resultado medido en esta ejecucion, no heredado del texto. La ponderacion "
+    f"temporal del ajuste de los cuantiles lleva el ancho relativo de "
+    f"{_ancho_base:.2f}x a {_mejor:.2f}x en el mejor caso, manteniendo la cobertura "
+    f"por encima del 95%. Veredicto automatico: {ponderacion['veredicto']}. "
+    "HISTORIA, PORQUE LA ETIQUETA HA CAMBIADO DOS VECES Y ESO IMPORTA. La segunda "
+    "auditoria declaro el ancho 'trabajo futuro corregible' y nombro este remedio "
+    "SIN medirlo. La tercera lo midio bajo el esquema 70/20/10, no funciono "
+    "(empeoraba con half-life de 1 anio y apenas mejoraba con 6 meses mientras "
+    "triplicaba Q) y lo devolvio a 'limitacion estructural'. Bajo el esquema 80/20, "
+    "y una vez que la Q lleva suelo en cero —de modo que la variante ponderada ya "
+    "no puede ganar ancho estrechando el intervalo—, la medicion vuelve a dar "
+    "positiva. "
+    "NO SE ADOPTA, y el motivo es el mismo que ya llevo a descartar el filtro de "
+    "peso y el recorte de colas: el half-life es un parametro elegido de una "
+    "rejilla de dos valores DESPUES de ver el resultado, y adoptar un cambio "
+    "porque mejora una metrica, con una regla fijada a posteriori, es precisamente "
+    "el sesgo que las revisiones anteriores han venido corrigiendo. Queda "
+    "registrado como candidato con evidencia a favor: adoptarlo exige fijar el "
+    "half-life por un criterio independiente del resultado y verificar la "
+    "cobertura condicional por horizonte, no solo la marginal."
 )
 print(f"  VEREDICTO: {ponderacion['veredicto']}.")
-print("  El ancho vuelve a declararse LIMITACION ESTRUCTURAL, no 'trabajo futuro'.")
+print("  El ancho se declara LIMITACION ESTRUCTURAL mientras el veredicto sea "
+      "'no corregible por esta via';" if not _funciona else
+      "  El veredicto ha cambiado respecto de rondas anteriores: revisar la "
+      "redaccion de la limitacion")
+print("  la etiqueta la fija esta medicion en cada ejecucion, no el texto." if not _funciona else
+      "  en la documentacion antes de publicarla.")
 
 # Variacion del ancho por representatividad del importador.
 test_eval = p.test.copy()
@@ -505,8 +643,29 @@ print("la afirmacion defendible es que varia, no que discrimine fuertemente el c
 joblib.dump(model_lo, QLO_PATH)
 joblib.dump(model_hi, QHI_PATH)
 
+meta["ic95_seleccion_n_estimators"] = seleccion_q
+meta["ic95_receta"] = {
+    "bloque_de_ajuste": "train + val_es (cola del 80% hasta el corte de calibracion)",
+    "n_filas_ajuste": len(BLOQUE_Q),
+    "rango_ajuste": [str(BLOQUE_Q["FECHA"].min().date()),
+                     str(BLOQUE_Q["FECHA"].max().date())],
+    "n_estimators_q_lo": int(model_lo.n_estimators),
+    "n_estimators_q_hi": int(model_hi.n_estimators),
+    "early_stopping": False,
+    "conjunto_de_calibracion": [str(val_cal["FECHA"].min().date()),
+                                str(val_cal["FECHA"].max().date())],
+    "n_calibracion": len(val_cal),
+    "nota": (
+        "VAL_CAL queda fuera del ajuste por exigencia de CQR, no por el early "
+        "stopping (que ya no existe). El numero de arboles se selecciona por "
+        "separado para cada cuantil con su propia perdida, por origen rodante "
+        "trimestral dentro del bloque de ajuste."
+    ),
+}
 meta["ic95_metodo"] = "conformalized_quantile_regression"
 meta["ic95_conformal_Q"] = Q
+meta["ic95_conformal_Q_cqr_crudo"] = Q_cqr_crudo
+meta["ic95_suelo_cero_aplicado"] = bool(_suelo_aplicado)
 meta["ic95_conformal_Q_extrapolado"] = Q_extrap
 # H-12: lo que se declara calibrado NO es hasta donde llega la tabla, sino hasta
 # donde la Q cruda sigue siendo una estimacion. Ver el bloque de H_DECLARADO.
@@ -514,11 +673,37 @@ meta["ic95_horizonte_calibrado_meses"] = H_DECLARADO
 meta["ic95_horizonte_maximo_estimable_meses"] = H_MAX
 meta["ic95_conformal_Q_por_horizonte"] = {str(k): v for k, v in Q_por_horizonte.items()}
 meta["ic95_conformal_Q_cruda_por_horizonte"] = {str(k): v for k, v in _Q_cruda.items()}
+meta["ic95_conformal_Q_cruda_sin_suelo_por_horizonte"] = {str(k): v for k, v in _Q_sin_suelo.items()}
+meta["ic95_tabla_horizonte_inerte"] = bool(TABLA_INERTE)
 meta["ic95_diagnostico"] = {
     "val_cal": diag_cal,
     "test": diag_test,
     "test_condiciones_produccion": diag_test_prod,
     "desvio_cobertura_test_pp": round(desvio, 2),
+    "suelo_cero": {
+        "aplicado": bool(_suelo_aplicado),
+        "Q_cqr_crudo": round(Q_cqr_crudo, 5),
+        "Q_servida": round(Q, 5),
+        "cobertura_holdout_con_Q_cruda_%": round(
+            100 * float((
+                (y_test.values >= model_lo.predict(X_test) - Q_cqr_crudo)
+                & (y_test.values <= model_hi.predict(X_test) + Q_cqr_crudo)
+            ).mean()), 2),
+        "cobertura_holdout_con_Q_servida_%": round(
+            100 * float((
+                (y_test.values >= model_lo.predict(X_test) - Q)
+                & (y_test.values <= model_hi.predict(X_test) + Q)
+            ).mean()), 2),
+        "regla": (
+            "La calibracion conformal puede ENSANCHAR el intervalo, nunca "
+            "encogerlo. Una Q negativa significa que los cuantiles ya "
+            "sobre-cubren sobre el conjunto de calibracion y que CQR pide "
+            "estrechar para alcanzar la cobertura exacta; estrechar solo es "
+            "valido bajo exchangeability entre calibracion y futuro, que es "
+            "la hipotesis que este trabajo declara rota. Se conserva la mitad "
+            "conservadora de la correccion y se descarta la otra."
+        ),
+    },
     "quantile_crossing_val_cal": n_cross,
     "brecha_ancho_por_representatividad_%": round(float(brecha), 1),
     "especificacion": espec,
@@ -530,6 +715,8 @@ meta["ic95_diagnostico"] = {
         "congelamiento": "por fila, en (mes de la fila - 1 - h)",
         "Q_por_horizonte": {str(k): round(v, 6) for k, v in Q_por_horizonte.items()},
         "Q_cruda_sin_monotonizar": {str(k): round(v, 6) for k, v in _Q_cruda.items()},
+        "Q_cruda_sin_suelo": {str(k): round(v, 6) for k, v in _Q_sin_suelo.items()},
+        "tabla_inerte": bool(TABLA_INERTE),
         "cobertura_condicional_por_horizonte_val_cal": cobertura_por_horizonte,
         "cobertura_condicional_minima_%": round(_min_cob, 2),
         "mes_congelado_test_produccion": str(_MES_CONGELADO_TEST),
@@ -551,7 +738,7 @@ meta["ic95_diagnostico"] = {
             "ese periodo (el pico de 2024), no una ley general."
         ),
     },
-    "ratio_Q_extrapolado_sobre_Q": round(Q_extrap / Q, 2),
+    "ratio_Q_extrapolado_sobre_Q": round(Q_extrap / Q, 2) if Q > 0 else None,
     "nota": (
         "La cobertura en VAL_CAL (~95%) verifica que la calibracion conformal "
         "esta bien hecha. El desvio en TEST mezcla ruptura de exchangeability y "

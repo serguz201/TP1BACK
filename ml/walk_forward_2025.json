@@ -1,0 +1,956 @@
+{
+  "protocolo": "Origen rodante mensual sobre 2025: entrena hasta diciembre-2024 y predice enero-2025; entrena hasta enero y predice febrero; y asi los doce meses. Cada pliegue reajusta TODO el pipeline (umbrales de recorte, lookup de ruta, encoders, medianas y serie de mercado) con datos estrictamente anteriores al mes que predice, llamando al mismo data_pipeline.particionar() que usa el entrenamiento de produccion.",
+  "esquema_particion_base": "80_20",
+  "anio_evaluado": 2025,
+  "meses_evaluados": 12,
+  "hiperparametros": {
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "random_state": 42,
+    "objective": "reg:absoluteerror",
+    "eval_metric": "mae",
+    "n_estimators": 112
+  },
+  "seleccion_n_estimators": {
+    "metodo": "origen rodante trimestral interno; se elige el MENOR numero de arboles cuya curva de MAE media normalizada queda a menos de un 1% del minimo",
+    "n_estimators_elegido": 112,
+    "n_estimators_argmin": 496,
+    "n_max_explorado": 600,
+    "pliegues": 11,
+    "detalle_pliegues": [
+      {
+        "trimestre": "2022Q2",
+        "n_train": 15102,
+        "n_pliegue": 3901,
+        "argmin_individual": 591
+      },
+      {
+        "trimestre": "2022Q3",
+        "n_train": 19003,
+        "n_pliegue": 4159,
+        "argmin_individual": 66
+      },
+      {
+        "trimestre": "2022Q4",
+        "n_train": 23162,
+        "n_pliegue": 4149,
+        "argmin_individual": 1
+      },
+      {
+        "trimestre": "2023Q1",
+        "n_train": 27311,
+        "n_pliegue": 3617,
+        "argmin_individual": 600
+      },
+      {
+        "trimestre": "2023Q2",
+        "n_train": 30928,
+        "n_pliegue": 3878,
+        "argmin_individual": 241
+      },
+      {
+        "trimestre": "2023Q3",
+        "n_train": 34806,
+        "n_pliegue": 4520,
+        "argmin_individual": 526
+      },
+      {
+        "trimestre": "2023Q4",
+        "n_train": 39326,
+        "n_pliegue": 4272,
+        "argmin_individual": 525
+      },
+      {
+        "trimestre": "2024Q1",
+        "n_train": 43598,
+        "n_pliegue": 3039,
+        "argmin_individual": 61
+      },
+      {
+        "trimestre": "2024Q2",
+        "n_train": 46637,
+        "n_pliegue": 4397,
+        "argmin_individual": 42
+      },
+      {
+        "trimestre": "2024Q3",
+        "n_train": 51034,
+        "n_pliegue": 4738,
+        "argmin_individual": 1
+      },
+      {
+        "trimestre": "2024Q4",
+        "n_train": 55772,
+        "n_pliegue": 5634,
+        "argmin_individual": 46
+      }
+    ],
+    "dispersion_optimos_individuales": [
+      1,
+      600
+    ],
+    "meseta_1pct": [
+      112,
+      600
+    ],
+    "penalizacion_en_los_extremos_%": {
+      "n=20": 48.47,
+      "n=600": 0.32
+    },
+    "nota": "Sustituye al early stopping de ventana unica, que con el esquema 80/20 elegia ~20 arboles y triplicaba el error sobre 2025 (56.74% frente a 25.07% sin seleccionar nada): la cola de 2024 esta en el mismo nivel de mercado que el bloque de entrenamiento y ahi gana el modelo pegado a la mediana. El optimo de cada pliegue por separado va de 1 a 596 arboles segun el trimestre, asi que promediar sobre todos los pliegues elegibles no es un refinamiento: es lo unico que hace estimable el parametro. Ningun pliegue toca el holdout.",
+    "origen": "leido de modelo_meta.json (receta del modelo desplegado)"
+  },
+  "resumen": {
+    "rodante": {
+      "meses": 12,
+      "n_total": 20885,
+      "MAPE_ponderado_%": 24.75,
+      "MAPE_promedio_simple_%": 24.87,
+      "MAPE_sd_%": 11.02,
+      "MAPE_min_%": 13.62,
+      "MAPE_max_%": 51.87,
+      "MAE_ponderado": 0.0483,
+      "mes_peor": "2025-06",
+      "mes_mejor": "2025-08"
+    },
+    "rodante_rezago_sunat": {
+      "meses": 12,
+      "n_total": 20885,
+      "MAPE_ponderado_%": 31.75,
+      "MAPE_promedio_simple_%": 31.72,
+      "MAPE_sd_%": 12.8,
+      "MAPE_min_%": 17.64,
+      "MAPE_max_%": 55.92,
+      "MAE_ponderado": 0.0589,
+      "mes_peor": "2025-01",
+      "mes_mejor": "2025-08"
+    },
+    "estatico_mismas_filas": {
+      "meses": 12,
+      "n_total": 20885,
+      "MAPE_ponderado_%": 28.48,
+      "MAPE_promedio_simple_%": 28.88,
+      "MAPE_sd_%": 21.07,
+      "MAPE_min_%": 15.73,
+      "MAPE_max_%": 93.78,
+      "MAE_ponderado": 0.0537,
+      "mes_peor": "2025-06",
+      "mes_mejor": "2025-09"
+    },
+    "estatico_artifact_sobre_su_holdout": {
+      "meses": 12,
+      "n_total": 20891,
+      "MAPE_ponderado_%": 27.66,
+      "MAPE_promedio_simple_%": 28.03,
+      "MAPE_sd_%": 19.59,
+      "MAPE_min_%": 14.85,
+      "MAPE_max_%": 88.11,
+      "MAE_ponderado": 0.053,
+      "mes_peor": "2025-06",
+      "mes_mejor": "2025-09"
+    },
+    "comparabilidad_conjuntos": {
+      "n_filas_evaluadas_pliegues": 20885,
+      "n_filas_holdout_artifact": 20891,
+      "diferencia_%": 0.03,
+      "causa": "El recorte de atipicos se reajusta en cada pliegue, asi que el mes evaluado por el origen rodante y el mismo mes dentro del holdout del artifact no contienen exactamente las mismas filas. Por eso la ganancia de reentrenar se calcula contra `estatico_mismas_filas` —el modelo estatico evaluado sobre las filas del pliegue— y no contra esta segunda vista."
+    },
+    "lineas_base": {
+      "persistencia_lag1": {
+        "meses": 12,
+        "n_total": 20885,
+        "MAPE_ponderado_%": 28.64,
+        "MAPE_promedio_simple_%": 28.58,
+        "MAPE_sd_%": 7.09,
+        "MAPE_min_%": 16.64,
+        "MAPE_max_%": 41.48,
+        "MAE_ponderado": 0.0518,
+        "mes_peor": "2025-03",
+        "mes_mejor": "2025-06"
+      },
+      "media_movil_ma3": {
+        "meses": 12,
+        "n_total": 20885,
+        "MAPE_ponderado_%": 33.82,
+        "MAPE_promedio_simple_%": 33.81,
+        "MAPE_sd_%": 10.34,
+        "MAPE_min_%": 18.48,
+        "MAPE_max_%": 51.25,
+        "MAE_ponderado": 0.0591,
+        "mes_peor": "2025-03",
+        "mes_mejor": "2025-06"
+      },
+      "mediana_train": {
+        "meses": 12,
+        "n_total": 20885,
+        "MAPE_ponderado_%": 92.24,
+        "MAPE_promedio_simple_%": 92.45,
+        "MAPE_sd_%": 33.44,
+        "MAPE_min_%": 42.46,
+        "MAPE_max_%": 144.12,
+        "MAE_ponderado": 0.1492,
+        "mes_peor": "2025-06",
+        "mes_mejor": "2025-02"
+      }
+    },
+    "ganancia_de_reentrenar_pp": 3.73,
+    "coste_del_rezago_sunat_pp": 7.0,
+    "gana_a_todas_las_lineas_base": true
+  },
+  "por_trimestre": {
+    "2025-T1": {
+      "meses": 3,
+      "n_total": 4906,
+      "MAPE_ponderado_%": 21.2,
+      "MAPE_promedio_simple_%": 21.35,
+      "MAPE_sd_%": 2.02,
+      "MAPE_min_%": 20.16,
+      "MAPE_max_%": 23.68,
+      "MAE_ponderado": 0.0433,
+      "mes_peor": "2025-02",
+      "mes_mejor": "2025-01"
+    },
+    "2025-T2": {
+      "meses": 3,
+      "n_total": 4761,
+      "MAPE_ponderado_%": 35.49,
+      "MAPE_promedio_simple_%": 35.22,
+      "MAPE_sd_%": 17.58,
+      "MAPE_min_%": 16.83,
+      "MAPE_max_%": 51.87,
+      "MAE_ponderado": 0.0533,
+      "mes_peor": "2025-06",
+      "mes_mejor": "2025-04"
+    },
+    "2025-T3": {
+      "meses": 3,
+      "n_total": 5188,
+      "MAPE_ponderado_%": 21.51,
+      "MAPE_promedio_simple_%": 20.83,
+      "MAPE_sd_%": 10.5,
+      "MAPE_min_%": 13.62,
+      "MAPE_max_%": 32.88,
+      "MAE_ponderado": 0.0586,
+      "mes_peor": "2025-07",
+      "mes_mejor": "2025-08"
+    },
+    "2025-T4": {
+      "meses": 3,
+      "n_total": 6030,
+      "MAPE_ponderado_%": 21.93,
+      "MAPE_promedio_simple_%": 22.09,
+      "MAPE_sd_%": 5.39,
+      "MAPE_min_%": 16.25,
+      "MAPE_max_%": 26.88,
+      "MAE_ponderado": 0.0396,
+      "mes_peor": "2025-10",
+      "mes_mejor": "2025-12"
+    }
+  },
+  "detalle_mensual": [
+    {
+      "mes": "2025-01",
+      "trimestre": "2025-T1",
+      "n_entrenamiento": 61406,
+      "n_evaluado": 2079,
+      "entrena_hasta": "2024-12-31",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0429,
+        "RMSE": 0.0575,
+        "MAPE_%": 20.16,
+        "R2": 0.1949
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.1118,
+        "RMSE": 0.1223,
+        "MAPE_%": 55.92,
+        "R2": -2.6491
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0429,
+        "RMSE": 0.0575,
+        "MAPE_%": 20.16,
+        "R2": 0.1949
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0574,
+          "RMSE": 0.0731,
+          "MAPE_%": 31.0,
+          "R2": -0.3013
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0891,
+          "RMSE": 0.1039,
+          "MAPE_%": 47.16,
+          "R2": -1.6296
+        },
+        "mediana_train": {
+          "MAE": 0.0903,
+          "RMSE": 0.1051,
+          "MAPE_%": 47.75,
+          "R2": -1.6917
+        }
+      },
+      "nivel_mercado_mes": 0.2483,
+      "variacion_vs_mes_previo_%": 12.4,
+      "puertos_no_vistos_%": 1.49,
+      "importadores_no_vistos_%": 3.27,
+      "estatico_artifact": {
+        "MAE": 0.0429,
+        "RMSE": 0.0575,
+        "MAPE_%": 20.16,
+        "R2": 0.1949,
+        "n": 2079
+      },
+      "ganancia_reentrenar_pp": 0.0
+    },
+    {
+      "mes": "2025-02",
+      "trimestre": "2025-T1",
+      "n_entrenamiento": 63423,
+      "n_evaluado": 1436,
+      "entrena_hasta": "2025-01-31",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0557,
+        "RMSE": 0.0772,
+        "MAPE_%": 23.68,
+        "R2": -0.1346
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0539,
+        "RMSE": 0.0731,
+        "MAPE_%": 28.96,
+        "R2": -0.0166
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0474,
+        "RMSE": 0.0703,
+        "MAPE_%": 21.23,
+        "R2": 0.0592
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.051,
+          "RMSE": 0.0734,
+          "MAPE_%": 26.67,
+          "R2": -0.0251
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0668,
+          "RMSE": 0.0871,
+          "MAPE_%": 36.72,
+          "R2": -0.4449
+        },
+        "mediana_train": {
+          "MAE": 0.0774,
+          "RMSE": 0.0969,
+          "MAPE_%": 42.46,
+          "R2": -0.7896
+        }
+      },
+      "nivel_mercado_mes": 0.2398,
+      "variacion_vs_mes_previo_%": 4.57,
+      "puertos_no_vistos_%": 1.39,
+      "importadores_no_vistos_%": 1.88,
+      "estatico_artifact": {
+        "MAE": 0.0488,
+        "RMSE": 0.0722,
+        "MAPE_%": 22.23,
+        "R2": 0.025,
+        "n": 1442
+      },
+      "ganancia_reentrenar_pp": -2.45
+    },
+    {
+      "mes": "2025-03",
+      "trimestre": "2025-T1",
+      "n_entrenamiento": 64917,
+      "n_evaluado": 1391,
+      "entrena_hasta": "2025-02-28",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0311,
+        "RMSE": 0.0428,
+        "MAPE_%": 20.2,
+        "R2": 0.1847
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.067,
+        "RMSE": 0.0749,
+        "MAPE_%": 42.56,
+        "R2": -1.4951
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0389,
+        "RMSE": 0.0499,
+        "MAPE_%": 25.56,
+        "R2": -0.1101
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0616,
+          "RMSE": 0.0731,
+          "MAPE_%": 41.48,
+          "R2": -1.3775
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0776,
+          "RMSE": 0.0874,
+          "MAPE_%": 51.25,
+          "R2": -2.4024
+        },
+        "mediana_train": {
+          "MAE": 0.1324,
+          "RMSE": 0.139,
+          "MAPE_%": 83.96,
+          "R2": -7.5981
+        }
+      },
+      "nivel_mercado_mes": 0.1835,
+      "variacion_vs_mes_previo_%": 23.26,
+      "puertos_no_vistos_%": 0.22,
+      "importadores_no_vistos_%": 5.82,
+      "estatico_artifact": {
+        "MAE": 0.039,
+        "RMSE": 0.0496,
+        "MAPE_%": 25.56,
+        "R2": -0.0967,
+        "n": 1391
+      },
+      "ganancia_reentrenar_pp": 5.36
+    },
+    {
+      "mes": "2025-04",
+      "trimestre": "2025-T2",
+      "n_entrenamiento": 66366,
+      "n_evaluado": 1542,
+      "entrena_hasta": "2025-03-31",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0306,
+        "RMSE": 0.0406,
+        "MAPE_%": 16.83,
+        "R2": 0.3307
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0293,
+        "RMSE": 0.04,
+        "MAPE_%": 19.57,
+        "R2": 0.349
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0327,
+        "RMSE": 0.0418,
+        "MAPE_%": 19.36,
+        "R2": 0.2911
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0418,
+          "RMSE": 0.05,
+          "MAPE_%": 26.96,
+          "R2": -0.0169
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0557,
+          "RMSE": 0.0681,
+          "MAPE_%": 40.22,
+          "R2": -0.8815
+        },
+        "mediana_train": {
+          "MAE": 0.1584,
+          "RMSE": 0.1655,
+          "MAPE_%": 104.89,
+          "R2": -10.1168
+        }
+      },
+      "nivel_mercado_mes": 0.1771,
+      "variacion_vs_mes_previo_%": 3.51,
+      "puertos_no_vistos_%": 0.39,
+      "importadores_no_vistos_%": 1.82,
+      "estatico_artifact": {
+        "MAE": 0.0327,
+        "RMSE": 0.0434,
+        "MAPE_%": 17.8,
+        "R2": 0.2366,
+        "n": 1542
+      },
+      "ganancia_reentrenar_pp": 2.53
+    },
+    {
+      "mes": "2025-05",
+      "trimestre": "2025-T2",
+      "n_entrenamiento": 67839,
+      "n_evaluado": 1605,
+      "entrena_hasta": "2025-04-30",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0537,
+        "RMSE": 0.0579,
+        "MAPE_%": 36.96,
+        "R2": -1.9129
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0574,
+        "RMSE": 0.0612,
+        "MAPE_%": 39.34,
+        "R2": -2.2585
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0387,
+        "RMSE": 0.0461,
+        "MAPE_%": 27.21,
+        "R2": -0.8497
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0301,
+          "RMSE": 0.0409,
+          "MAPE_%": 22.85,
+          "R2": -0.4518
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0492,
+          "RMSE": 0.0572,
+          "MAPE_%": 36.55,
+          "R2": -1.8417
+        },
+        "mediana_train": {
+          "MAE": 0.2034,
+          "RMSE": 0.2057,
+          "MAPE_%": 141.82,
+          "R2": -35.7731
+        }
+      },
+      "nivel_mercado_mes": 0.1543,
+      "variacion_vs_mes_previo_%": 12.88,
+      "puertos_no_vistos_%": 0.0,
+      "importadores_no_vistos_%": 2.12,
+      "estatico_artifact": {
+        "MAE": 0.0382,
+        "RMSE": 0.0452,
+        "MAPE_%": 26.51,
+        "R2": -0.7734,
+        "n": 1605
+      },
+      "ganancia_reentrenar_pp": -9.75
+    },
+    {
+      "mes": "2025-06",
+      "trimestre": "2025-T2",
+      "n_entrenamiento": 69440,
+      "n_evaluado": 1614,
+      "entrena_hasta": "2025-05-31",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0745,
+        "RMSE": 0.0801,
+        "MAPE_%": 51.87,
+        "R2": -5.1456
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0722,
+        "RMSE": 0.0779,
+        "MAPE_%": 50.37,
+        "R2": -4.8126
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.1371,
+        "RMSE": 0.1435,
+        "MAPE_%": 93.78,
+        "R2": -18.723
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0243,
+          "RMSE": 0.0326,
+          "MAPE_%": 16.64,
+          "R2": -0.0157
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0244,
+          "RMSE": 0.035,
+          "MAPE_%": 18.48,
+          "R2": -0.1764
+        },
+        "mediana_train": {
+          "MAE": 0.2115,
+          "RMSE": 0.2139,
+          "MAPE_%": 144.12,
+          "R2": -42.8432
+        }
+      },
+      "nivel_mercado_mes": 0.1583,
+      "variacion_vs_mes_previo_%": 2.63,
+      "puertos_no_vistos_%": 0.0,
+      "importadores_no_vistos_%": 2.23,
+      "estatico_artifact": {
+        "MAE": 0.1289,
+        "RMSE": 0.1343,
+        "MAPE_%": 88.11,
+        "R2": -16.2946,
+        "n": 1614
+      },
+      "ganancia_reentrenar_pp": 41.91
+    },
+    {
+      "mes": "2025-07",
+      "trimestre": "2025-T3",
+      "n_entrenamiento": 71025,
+      "n_evaluado": 1927,
+      "entrena_hasta": "2025-06-30",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.103,
+        "RMSE": 0.1371,
+        "MAPE_%": 32.88,
+        "R2": -0.7697
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.1023,
+        "RMSE": 0.1366,
+        "MAPE_%": 32.52,
+        "R2": -0.7572
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0954,
+        "RMSE": 0.1249,
+        "MAPE_%": 32.7,
+        "R2": -0.47
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.109,
+          "RMSE": 0.1452,
+          "MAPE_%": 34.44,
+          "R2": -0.9872
+        },
+        "media_movil_ma3": {
+          "MAE": 0.1059,
+          "RMSE": 0.1418,
+          "MAPE_%": 33.57,
+          "R2": -0.895
+        },
+        "mediana_train": {
+          "MAE": 0.1293,
+          "RMSE": 0.1496,
+          "MAPE_%": 69.99,
+          "R2": -1.1088
+        }
+      },
+      "nivel_mercado_mes": 0.2607,
+      "variacion_vs_mes_previo_%": 64.66,
+      "puertos_no_vistos_%": 3.43,
+      "importadores_no_vistos_%": 2.75,
+      "estatico_artifact": {
+        "MAE": 0.0967,
+        "RMSE": 0.13,
+        "MAPE_%": 31.18,
+        "R2": -0.5918,
+        "n": 1927
+      },
+      "ganancia_reentrenar_pp": -0.18
+    },
+    {
+      "mes": "2025-08",
+      "trimestre": "2025-T3",
+      "n_entrenamiento": 73019,
+      "n_evaluado": 1651,
+      "entrena_hasta": "2025-07-31",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0318,
+        "RMSE": 0.0517,
+        "MAPE_%": 13.62,
+        "R2": 0.1502
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0434,
+        "RMSE": 0.0653,
+        "MAPE_%": 17.64,
+        "R2": -0.353
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0537,
+        "RMSE": 0.0703,
+        "MAPE_%": 22.12,
+        "R2": -0.5698
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0518,
+          "RMSE": 0.0646,
+          "MAPE_%": 26.25,
+          "R2": -0.3255
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0491,
+          "RMSE": 0.0678,
+          "MAPE_%": 19.81,
+          "R2": -0.4583
+        },
+        "mediana_train": {
+          "MAE": 0.1422,
+          "RMSE": 0.1513,
+          "MAPE_%": 71.32,
+          "R2": -6.2623
+        }
+      },
+      "nivel_mercado_mes": 0.2293,
+      "variacion_vs_mes_previo_%": 12.25,
+      "puertos_no_vistos_%": 0.0,
+      "importadores_no_vistos_%": 4.48,
+      "estatico_artifact": {
+        "MAE": 0.0534,
+        "RMSE": 0.0695,
+        "MAPE_%": 21.75,
+        "R2": -0.5353,
+        "n": 1651
+      },
+      "ganancia_reentrenar_pp": 8.5
+    },
+    {
+      "mes": "2025-09",
+      "trimestre": "2025-T3",
+      "n_entrenamiento": 74639,
+      "n_evaluado": 1610,
+      "entrena_hasta": "2025-08-30",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0329,
+        "RMSE": 0.0439,
+        "MAPE_%": 15.99,
+        "R2": 0.0776
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0342,
+        "RMSE": 0.0422,
+        "MAPE_%": 19.66,
+        "R2": 0.1462
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0305,
+        "RMSE": 0.0413,
+        "MAPE_%": 15.73,
+        "R2": 0.1807
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0441,
+          "RMSE": 0.0533,
+          "MAPE_%": 26.44,
+          "R2": -0.3621
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0389,
+          "RMSE": 0.0479,
+          "MAPE_%": 22.7,
+          "R2": -0.1007
+        },
+        "mediana_train": {
+          "MAE": 0.1679,
+          "RMSE": 0.174,
+          "MAPE_%": 94.23,
+          "R2": -13.5165
+        }
+      },
+      "nivel_mercado_mes": 0.2018,
+      "variacion_vs_mes_previo_%": 11.99,
+      "puertos_no_vistos_%": 0.25,
+      "importadores_no_vistos_%": 10.68,
+      "estatico_artifact": {
+        "MAE": 0.0296,
+        "RMSE": 0.0397,
+        "MAPE_%": 14.85,
+        "R2": 0.2436,
+        "n": 1610
+      },
+      "ganancia_reentrenar_pp": -0.26
+    },
+    {
+      "mes": "2025-10",
+      "trimestre": "2025-T4",
+      "n_entrenamiento": 76237,
+      "n_evaluado": 1966,
+      "entrena_hasta": "2025-09-30",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.057,
+        "RMSE": 0.0638,
+        "MAPE_%": 26.88,
+        "R2": -0.3822
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0518,
+        "RMSE": 0.0583,
+        "MAPE_%": 25.14,
+        "R2": -0.1532
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0659,
+        "RMSE": 0.0747,
+        "MAPE_%": 30.13,
+        "R2": -0.8941
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.05,
+          "RMSE": 0.058,
+          "MAPE_%": 24.99,
+          "R2": -0.1416
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0446,
+          "RMSE": 0.055,
+          "MAPE_%": 25.82,
+          "R2": -0.0249
+        },
+        "mediana_train": {
+          "MAE": 0.1357,
+          "RMSE": 0.1462,
+          "MAPE_%": 74.9,
+          "R2": -6.253
+        }
+      },
+      "nivel_mercado_mes": 0.2222,
+      "variacion_vs_mes_previo_%": 10.12,
+      "puertos_no_vistos_%": 0.0,
+      "importadores_no_vistos_%": 3.81,
+      "estatico_artifact": {
+        "MAE": 0.066,
+        "RMSE": 0.0747,
+        "MAPE_%": 30.04,
+        "R2": -0.8939,
+        "n": 1966
+      },
+      "ganancia_reentrenar_pp": 3.25
+    },
+    {
+      "mes": "2025-11",
+      "trimestre": "2025-T4",
+      "n_entrenamiento": 78187,
+      "n_evaluado": 1943,
+      "entrena_hasta": "2025-10-31",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0338,
+        "RMSE": 0.0443,
+        "MAPE_%": 23.13,
+        "R2": 0.0014
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0428,
+        "RMSE": 0.0528,
+        "MAPE_%": 29.19,
+        "R2": -0.416
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0324,
+        "RMSE": 0.0425,
+        "MAPE_%": 21.93,
+        "R2": 0.0801
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0552,
+          "RMSE": 0.0662,
+          "MAPE_%": 39.97,
+          "R2": -1.2259
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0518,
+          "RMSE": 0.0629,
+          "MAPE_%": 37.65,
+          "R2": -1.0135
+        },
+        "mediana_train": {
+          "MAE": 0.1739,
+          "RMSE": 0.1795,
+          "MAPE_%": 115.21,
+          "R2": -15.3842
+        }
+      },
+      "nivel_mercado_mes": 0.1731,
+      "variacion_vs_mes_previo_%": 22.09,
+      "puertos_no_vistos_%": 0.82,
+      "importadores_no_vistos_%": 4.48,
+      "estatico_artifact": {
+        "MAE": 0.0323,
+        "RMSE": 0.0424,
+        "MAPE_%": 21.81,
+        "R2": 0.0874,
+        "n": 1943
+      },
+      "ganancia_reentrenar_pp": -1.2
+    },
+    {
+      "mes": "2025-12",
+      "trimestre": "2025-T4",
+      "n_entrenamiento": 80167,
+      "n_evaluado": 2121,
+      "entrena_hasta": "2025-11-30",
+      "n_estimators": 112,
+      "rodante": {
+        "MAE": 0.0287,
+        "RMSE": 0.0589,
+        "MAPE_%": 16.25,
+        "R2": 0.1687
+      },
+      "rodante_rezago_sunat": {
+        "MAE": 0.0301,
+        "RMSE": 0.0588,
+        "MAPE_%": 19.72,
+        "R2": 0.1708
+      },
+      "estatico_mismas_filas": {
+        "MAE": 0.0292,
+        "RMSE": 0.0589,
+        "MAPE_%": 16.67,
+        "R2": 0.169
+      },
+      "lineas_base": {
+        "persistencia_lag1": {
+          "MAE": 0.0378,
+          "RMSE": 0.0651,
+          "MAPE_%": 25.21,
+          "R2": -0.0137
+        },
+        "media_movil_ma3": {
+          "MAE": 0.0498,
+          "RMSE": 0.0728,
+          "MAPE_%": 35.79,
+          "R2": -0.2686
+        },
+        "mediana_train": {
+          "MAE": 0.1706,
+          "RMSE": 0.1807,
+          "MAPE_%": 118.76,
+          "R2": -6.8198
+        }
+      },
+      "nivel_mercado_mes": 0.1656,
+      "variacion_vs_mes_previo_%": 4.37,
+      "puertos_no_vistos_%": 0.0,
+      "importadores_no_vistos_%": 5.33,
+      "estatico_artifact": {
+        "MAE": 0.0278,
+        "RMSE": 0.0384,
+        "MAPE_%": 16.4,
+        "R2": 0.3036,
+        "n": 2121
+      },
+      "ganancia_reentrenar_pp": 0.42
+    }
+  ],
+  "lectura": "Tres cifras que responden tres preguntas distintas y no deben mezclarse. (1) `rodante` es el rendimiento esperable del sistema SI se reentrena cada mes, que es como esta pensado para operar. (2) `estatico_mismas_filas` es el mismo modelo sin reentrenar sobre los mismos meses: su diferencia con (1) es el valor medido del reentrenamiento, y crece con el mes porque el modelo estatico acumula horizonte. (3) `rodante_rezago_sunat` es (1) suponiendo que la estadistica aduanera llega un mes tarde; es la cota pesimista realista, porque SUNAT publica con demora. Ninguna de las tres sustituye al MAPE del holdout que reporta train_model.py: ese responde 'cuanto cuesta no reentrenar en todo un anio' y es, deliberadamente, el mas pesimista.",
+  "limitaciones": [
+    "Doce pliegues sobre un unico anio y una unica trayectoria de mercado. La desviacion tipica entre meses describe la variabilidad DENTRO de 2025, no el error esperable en otro anio.",
+    "El primer pliegue (enero) entrena con 2021-2024 y el ultimo (diciembre) con 2021-2024 mas once meses: el tamano de entrenamiento crece un ~17% a lo largo del anio, asi que la comparacion entre meses mezcla estacionalidad, regimen de mercado y masa de datos.",
+    "Se evalua el modelo puntual. Los intervalos conformales no se recalibran por pliegue: su cobertura se mide en train_quantile_models.py sobre el holdout."
+  ]
+}
