@@ -540,7 +540,7 @@ def etapa_trazabilidad(p) -> dict:
             "El formulario NO captura peso bruto ni tipo de contenedor. "
             "`ratio_bruto_neto` es por tanto una constante en produccion (la "
             "mediana de train) y `densidad_carga` cae a su mediana si el usuario "
-            "omite las unidades. Ambas aportan en conjunto ~1.1% del gain, de modo "
+            "omite las unidades. Ambas aportan en conjunto ~1.2% del gain, de modo "
             "que la degradacion es marginal, pero debe declararse: son features del "
             "entrenamiento que produccion no puede reconstruir con fidelidad."
         ),

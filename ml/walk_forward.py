@@ -494,11 +494,18 @@ def ejecutar(csv_path: str = CSV_PATH, anio: int = ANIO, verbose: bool = True) -
             "desviacion tipica entre meses describe la variabilidad DENTRO de 2025, no "
             "el error esperable en otro anio.",
             "El primer pliegue (enero) entrena con 2021-2024 y el ultimo (diciembre) con "
-            "2021-2024 mas once meses: el tamano de entrenamiento crece un ~17% a lo "
-            "largo del anio, asi que la comparacion entre meses mezcla estacionalidad, "
-            "regimen de mercado y masa de datos.",
+            "2021-2024 mas once meses: el tamano de entrenamiento crece un 30.6% a lo "
+            "largo del anio (61,406 -> 80,167 filas), asi que la comparacion entre meses "
+            "mezcla estacionalidad, regimen de mercado y masa de datos. "
+            "ml/bootstrap_rodante.py separa las dos ultimas con un regimen de masa "
+            "constante: 3.55 de los 3.73 pp son recencia y 0.19 masa acumulada.",
             "Se evalua el modelo puntual. Los intervalos conformales no se recalibran por "
             "pliegue: su cobertura se mide en train_quantile_models.py sobre el holdout.",
+            "`ganancia_de_reentrenar_pp` y `coste_del_rezago_sunat_pp` son estimaciones "
+            "puntuales. Sus intervalos de confianza estan en ml/bootstrap_rodante.json, y "
+            "no son intercambiables: al remuestrear declaraciones los dos excluyen el "
+            "cero, pero al remuestrear los doce pliegues mensuales solo lo excluye el "
+            "coste del rezago. La ganancia de reentrenar se concentra en junio de 2025.",
         ],
     }
 

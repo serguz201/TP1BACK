@@ -171,6 +171,54 @@ async def test_h18_pdf_declara_el_regimen(cliente, usuarios):
     assert "AVISO" in cuerpo, "falta la advertencia de extrapolacion"
 
 
+# ── QA v1.8: el periodo se guarda y se muestra ───────────────────────────────
+
+@pytest.mark.asyncio
+async def test_qa18_periodo_anual_se_persiste_y_sale_en_el_pdf(cliente, usuarios):
+    import re
+    import zlib
+
+    h = usuarios["operativo"]["headers"]
+    r = await cliente.post("/api/quotations", headers=h, json={
+        "puerto_origen": "QINGDAO", "peso_kg": 10000,
+        "fecha_embarque": "2027-01-01", "periodo": "anual",
+    })
+    assert r.status_code == 201, r.text
+    assert r.json()["periodo"] == "anual"
+
+    pdf = (await cliente.get(f"/api/quotations/{r.json()['id']}/pdf", headers=h)).content
+    texto = []
+    for m in re.finditer(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S):
+        try:
+            bloque = zlib.decompress(m.group(1))
+        except Exception:
+            continue
+        texto += [x.decode("latin-1") for x in re.findall(rb"\((.*?)\)\s*Tj", bloque)]
+    cuerpo = " ".join(texto)
+    # Antes salia "Fecha de Embarque: 2027-01-01", como un embarque puntual.
+    assert "Anual 2027" in cuerpo, cuerpo[:400]
+    assert "Fecha de Embarque" not in cuerpo
+
+
+@pytest.mark.asyncio
+async def test_qa18_sin_fecha_no_hay_periodo(cliente, usuarios):
+    r = await cliente.post("/api/quotations", headers=usuarios["operativo"]["headers"], json={
+        "puerto_origen": "QINGDAO", "peso_kg": 10000, "periodo": "anual",
+    })
+    assert r.status_code == 201, r.text
+    assert r.json()["periodo"] is None
+
+
+def test_qa18_texto_del_periodo():
+    from app.services.pdf_service import periodo_texto
+
+    assert periodo_texto("anual", "2027-01-01") == "Anual 2027"
+    assert periodo_texto("mensual", "2026-03-01") == "Mensual 03/2026"
+    # 2026-06-22 es el lunes de la semana ISO 26 de 2026
+    assert periodo_texto("semanal", "2026-06-22") == "Semanal: semana 26 de 2026 (desde 22/06/2026)"
+    assert periodo_texto(None, "2026-03-01") is None
+
+
 # ── H-20: limite de tasa y tokens de reset ───────────────────────────────────
 
 @pytest.mark.asyncio

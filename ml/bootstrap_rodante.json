@@ -1,0 +1,409 @@
+{
+  "procedimiento": "Bootstrap pareado con B=2,000 remuestreos y semilla 42, el mismo procedimiento que ml/estudios_paper.py aplica a la comparacion de algoritmos y a la ablacion. Cada contraste se calcula sobre las filas en las que ambas series existen, con el mismo indice de remuestreo para las dos, y se reporta en dos unidades de remuestreo: la declaracion (`por_filas`) y el pliegue mensual (`por_mes`, bootstrap de bloques). El segundo es el intervalo pertinente para una afirmacion sobre el sistema, porque las declaraciones de un mismo mes comparten regimen de mercado y no son independientes.",
+  "n_bootstrap": 2000,
+  "semilla": 42,
+  "n_estimators": 112,
+  "anio_evaluado": 2025,
+  "MAPE_por_regimen": {
+    "rodante": {
+      "MAPE_ponderado_%": 24.75,
+      "n_filas": 20885,
+      "meses": 12
+    },
+    "estatico": {
+      "MAPE_ponderado_%": 28.48,
+      "n_filas": 20885,
+      "meses": 12
+    },
+    "rezago_sunat": {
+      "MAPE_ponderado_%": 31.75,
+      "n_filas": 20885,
+      "meses": 12
+    },
+    "ventana_fija": {
+      "MAPE_ponderado_%": 24.94,
+      "n_filas": 20885,
+      "meses": 12
+    },
+    "persistencia_lag1": {
+      "MAPE_ponderado_%": 28.64,
+      "n_filas": 20885,
+      "meses": 12
+    },
+    "media_movil_ma3": {
+      "MAPE_ponderado_%": 33.82,
+      "n_filas": 20885,
+      "meses": 12
+    },
+    "mediana_train": {
+      "MAPE_ponderado_%": 92.24,
+      "n_filas": 20885,
+      "meses": 12
+    }
+  },
+  "contrastes": {
+    "ganancia_de_reentrenar": {
+      "delta_pp": 3.74,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 3.74,
+        "IC95": [
+          3.53,
+          3.95
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 3.68,
+        "IC95": [
+          -1.25,
+          11.27
+        ],
+        "p_valor_una_cola": 0.111,
+        "significativo_95": false
+      },
+      "comparacion": "modelo congelado (mismas filas) vs reentrenamiento mensual"
+    },
+    "coste_del_rezago_sunat": {
+      "delta_pp": 7.0,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 7.0,
+        "IC95": [
+          6.72,
+          7.27
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 7.0,
+        "IC95": [
+          1.83,
+          14.24
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "comparacion": "reentrenado con la estadistica un mes tarde vs reentrenamiento mensual"
+    },
+    "vs_persistencia_lag1": {
+      "delta_pp": 3.89,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 3.89,
+        "IC95": [
+          3.56,
+          4.22
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 3.88,
+        "IC95": [
+          -4.75,
+          10.93
+        ],
+        "p_valor_una_cola": 0.171,
+        "significativo_95": false
+      },
+      "comparacion": "linea base: persistencia de mercado (lag1) vs reentrenamiento mensual"
+    },
+    "vs_media_movil_ma3": {
+      "delta_pp": 9.07,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 9.08,
+        "IC95": [
+          8.67,
+          9.49
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 9.11,
+        "IC95": [
+          -0.15,
+          17.46
+        ],
+        "p_valor_una_cola": 0.028,
+        "significativo_95": false
+      },
+      "comparacion": "linea base: media movil de tres meses vs reentrenamiento mensual"
+    },
+    "vs_mediana_train": {
+      "delta_pp": 67.49,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 67.49,
+        "IC95": [
+          66.69,
+          68.28
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 67.79,
+        "IC95": [
+          51.59,
+          84.03
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "comparacion": "linea base: mediana del bloque de entrenamiento vs reentrenamiento mensual"
+    },
+    "recencia_a_masa_constante": {
+      "delta_pp": 3.55,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 3.55,
+        "IC95": [
+          3.33,
+          3.77
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 3.56,
+        "IC95": [
+          -1.62,
+          11.46
+        ],
+        "p_valor_una_cola": 0.165,
+        "significativo_95": false
+      },
+      "comparacion": "modelo congelado (mismas filas) vs reentrenado con masa de datos constante"
+    },
+    "masa_acumulada": {
+      "delta_pp": 0.19,
+      "n_filas": 20885,
+      "por_filas": {
+        "delta_medio_pp": 0.19,
+        "IC95": [
+          0.13,
+          0.24
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true
+      },
+      "por_mes": {
+        "delta_medio_pp": 0.18,
+        "IC95": [
+          -0.66,
+          1.01
+        ],
+        "p_valor_una_cola": 0.325,
+        "significativo_95": false
+      },
+      "comparacion": "reentrenado con masa de datos constante vs reentrenamiento mensual"
+    }
+  },
+  "ganancia_de_reentrenar_por_mes_pp": {
+    "2025-01": 0.0,
+    "2025-02": -2.45,
+    "2025-03": 5.36,
+    "2025-04": 2.53,
+    "2025-05": -9.75,
+    "2025-06": 41.91,
+    "2025-07": -0.17,
+    "2025-08": 8.5,
+    "2025-09": -0.26,
+    "2025-10": 3.25,
+    "2025-11": -1.2,
+    "2025-12": 0.42
+  },
+  "ganancia_sin_el_mes_extremo": {
+    "mes_excluido": "2025-06",
+    "n_filas": 19271,
+    "delta_pp": 0.54,
+    "delta_medio_pp": 0.54,
+    "IC95": [
+      0.4,
+      0.68
+    ],
+    "p_valor_una_cola": 0.0,
+    "significativo_95": true
+  },
+  "confound_masa_de_datos": {
+    "crecimiento_del_bloque_%": 30.6,
+    "n_bloque_primer_pliegue": 61406,
+    "n_bloque_ultimo_pliegue": 80167,
+    "nota": "El bloque de ajuste crece a lo largo del anio, de modo que la ganancia de reentrenar recoge conjuntamente recencia y masa de datos. `recencia_a_masa_constante` y `masa_acumulada` las separan: el regimen `ventana_fija` ajusta cada pliegue sobre las N filas mas recientes de su bloque, con N igual al tamano del bloque del primer pliegue, de modo que solo varia la recencia."
+  },
+  "detalle_pliegues": [
+    {
+      "mes": "2025-01",
+      "n_bloque": 61406,
+      "n_evaluado": 2079,
+      "MAPE_%": {
+        "rodante": 20.16,
+        "estatico": 20.16,
+        "persistencia_lag1": 31.0,
+        "media_movil_ma3": 47.16,
+        "mediana_train": 47.75,
+        "rezago_sunat": 55.92,
+        "ventana_fija": 20.16
+      }
+    },
+    {
+      "mes": "2025-02",
+      "n_bloque": 63423,
+      "n_evaluado": 1436,
+      "MAPE_%": {
+        "rodante": 23.68,
+        "estatico": 21.23,
+        "persistencia_lag1": 26.67,
+        "media_movil_ma3": 36.72,
+        "mediana_train": 42.46,
+        "rezago_sunat": 28.96,
+        "ventana_fija": 23.98
+      }
+    },
+    {
+      "mes": "2025-03",
+      "n_bloque": 64917,
+      "n_evaluado": 1391,
+      "MAPE_%": {
+        "rodante": 20.2,
+        "estatico": 25.56,
+        "persistencia_lag1": 41.48,
+        "media_movil_ma3": 51.25,
+        "mediana_train": 83.96,
+        "rezago_sunat": 42.56,
+        "ventana_fija": 24.34
+      }
+    },
+    {
+      "mes": "2025-04",
+      "n_bloque": 66366,
+      "n_evaluado": 1542,
+      "MAPE_%": {
+        "rodante": 16.83,
+        "estatico": 19.36,
+        "persistencia_lag1": 26.96,
+        "media_movil_ma3": 40.22,
+        "mediana_train": 104.89,
+        "rezago_sunat": 19.57,
+        "ventana_fija": 16.9
+      }
+    },
+    {
+      "mes": "2025-05",
+      "n_bloque": 67839,
+      "n_evaluado": 1605,
+      "MAPE_%": {
+        "rodante": 36.96,
+        "estatico": 27.21,
+        "persistencia_lag1": 22.85,
+        "media_movil_ma3": 36.55,
+        "mediana_train": 141.82,
+        "rezago_sunat": 39.34,
+        "ventana_fija": 37.19
+      }
+    },
+    {
+      "mes": "2025-06",
+      "n_bloque": 69440,
+      "n_evaluado": 1614,
+      "MAPE_%": {
+        "rodante": 51.87,
+        "estatico": 93.78,
+        "persistencia_lag1": 16.64,
+        "media_movil_ma3": 18.48,
+        "mediana_train": 144.12,
+        "rezago_sunat": 50.37,
+        "ventana_fija": 48.57
+      }
+    },
+    {
+      "mes": "2025-07",
+      "n_bloque": 71025,
+      "n_evaluado": 1927,
+      "MAPE_%": {
+        "rodante": 32.88,
+        "estatico": 32.7,
+        "persistencia_lag1": 34.44,
+        "media_movil_ma3": 33.57,
+        "mediana_train": 69.99,
+        "rezago_sunat": 32.52,
+        "ventana_fija": 32.08
+      }
+    },
+    {
+      "mes": "2025-08",
+      "n_bloque": 73019,
+      "n_evaluado": 1651,
+      "MAPE_%": {
+        "rodante": 13.62,
+        "estatico": 22.12,
+        "persistencia_lag1": 26.25,
+        "media_movil_ma3": 19.81,
+        "mediana_train": 71.32,
+        "rezago_sunat": 17.64,
+        "ventana_fija": 14.56
+      }
+    },
+    {
+      "mes": "2025-09",
+      "n_bloque": 74639,
+      "n_evaluado": 1610,
+      "MAPE_%": {
+        "rodante": 15.99,
+        "estatico": 15.73,
+        "persistencia_lag1": 26.44,
+        "media_movil_ma3": 22.7,
+        "mediana_train": 94.23,
+        "rezago_sunat": 19.66,
+        "ventana_fija": 16.48
+      }
+    },
+    {
+      "mes": "2025-10",
+      "n_bloque": 76237,
+      "n_evaluado": 1966,
+      "MAPE_%": {
+        "rodante": 26.88,
+        "estatico": 30.13,
+        "persistencia_lag1": 24.99,
+        "media_movil_ma3": 25.82,
+        "mediana_train": 74.9,
+        "rezago_sunat": 25.14,
+        "ventana_fija": 26.42
+      }
+    },
+    {
+      "mes": "2025-11",
+      "n_bloque": 78187,
+      "n_evaluado": 1943,
+      "MAPE_%": {
+        "rodante": 23.13,
+        "estatico": 21.93,
+        "persistencia_lag1": 39.97,
+        "media_movil_ma3": 37.65,
+        "mediana_train": 115.21,
+        "rezago_sunat": 29.19,
+        "ventana_fija": 24.56
+      }
+    },
+    {
+      "mes": "2025-12",
+      "n_bloque": 80167,
+      "n_evaluado": 2121,
+      "MAPE_%": {
+        "rodante": 16.25,
+        "estatico": 16.67,
+        "persistencia_lag1": 25.21,
+        "media_movil_ma3": 35.79,
+        "mediana_train": 118.76,
+        "rezago_sunat": 19.72,
+        "ventana_fija": 16.21
+      }
+    }
+  ]
+}

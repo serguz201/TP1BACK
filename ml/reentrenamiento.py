@@ -340,10 +340,9 @@ def ejecutar_reentrenamiento(usuario: str = "") -> dict:
             logs.append({"paso": nombre, "codigo": codigo,
                          "salida": salida[-6000:] if salida else ""})
             if codigo != 0:
-                error = (
-                    f"El paso '{nombre}' fallo con codigo {codigo}. "
-                    "El artifact anterior se ha restaurado."
-                )
+                # El texto de la restauracion se agrega abajo, segun haya o no
+                # respaldo: _respaldar() devuelve None si faltaba algun fichero.
+                error = f"El paso '{nombre}' fallo con codigo {codigo}."
                 break
 
         if error is None:
@@ -354,11 +353,15 @@ def ejecutar_reentrenamiento(usuario: str = "") -> dict:
         elif sello:
             _restaurar(sello)
             revertido = True
+            error += " El artifact anterior se ha restaurado."
             try:
                 from ml import predictor
                 predictor.recargar_artifacts()
             except Exception:
                 logger.exception("No se pudo recargar el artifact restaurado.")
+        else:
+            error += (" No habia respaldo del artifact anterior, asi que no se "
+                      "restauro nada: el modelo en memoria sigue siendo el anterior.")
 
     except Exception as exc:
         error = f"Fallo inesperado durante el reentrenamiento: {exc}"
@@ -385,7 +388,8 @@ def ejecutar_reentrenamiento(usuario: str = "") -> dict:
         aviso = (
             f"El MAPE de test empeoro {delta:+.2f} puntos ({mape_antes}% -> "
             f"{mape_despues}%). El modelo nuevo esta activo: revise el registro "
-            "y, si no le convence, use 'Revertir al modelo anterior'."
+            "y, si no le convence, vuelva al anterior desde 'Modelos respaldados' "
+            "con 'Revertir'."
         )
     elif error is None and delta is not None:
         aviso = f"MAPE de test: {mape_antes}% -> {mape_despues}% ({delta:+.2f} puntos)."

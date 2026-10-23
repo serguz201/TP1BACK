@@ -506,9 +506,38 @@ def _resolver_lags(ref_date: datetime) -> tuple[float, float, float, str, int, s
         # Regimen 2: fecha posterior al historico. Rezagos vigentes.
         rates = get_market_rates()
         vigente = rates["vigente_hasta"]
+        if objetivo >= vigente:
+            return (
+                rates["lag1"], rates["lag2"], rates["lag3"], vigente,
+                _dist_meses(objetivo, vigente), "adelante",
+            )
+        # El mercado vigente (ingesta o ajuste manual) es POSTERIOR al mes que
+        # se cotiza. Antes se servian igualmente los rezagos vigentes con la
+        # distancia en valor absoluto: una cotizacion de 2026-03 con el mercado
+        # en 2026-09 usaba el mercado de septiembre y se rotulaba "proyectada 7
+        # mes(es) mas alla" de un mes que es POSTERIOR a ella. Ahora se ancla en
+        # el ultimo mes con sus tres rezagos conocidos que no supere al objetivo
+        # y se proyecta desde ahi, que es lo que el texto afirma.
+        conocidos = dict(SERIE_MERCADO)
+        for k, lag in enumerate(("lag1", "lag2", "lag3")):
+            y, m = int(vigente[:4]), int(vigente[5:7])
+            mes = _mes_anterior(y, m + 1, k + 1)  # vigente, vigente-1, vigente-2
+            if mes > _ULTIMO_MES_SERIE:
+                conocidos[mes] = rates[lag]
+        ancla = objetivo
+        while True:
+            y, m = int(ancla[:4]), int(ancla[5:7])
+            previos = [_mes_anterior(y, m + 1, k) for k in (1, 2, 3)]
+            if all(c in conocidos for c in previos):
+                break
+            ancla = _mes_anterior(y, m, 1)
         return (
-            rates["lag1"], rates["lag2"], rates["lag3"], vigente,
-            _dist_meses(objetivo, vigente), "adelante",
+            float(conocidos[previos[0]]),
+            float(conocidos[previos[1]]),
+            float(conocidos[previos[2]]),
+            ancla,
+            _dist_meses(objetivo, ancla),
+            "adelante",
         )
 
     # Regimen 3: anterior al historico, o dentro de el pero sin los tres rezagos

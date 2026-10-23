@@ -271,6 +271,26 @@ def progreso() -> dict:
     return dict(_progreso)
 
 
+def marcar_encolado() -> None:
+    """Marca `en_curso` ANTES de que el hilo del barrido arranque.
+
+    Mismo defecto que H-09 en el reentrenamiento: `en_curso` solo pasaba a True
+    dentro del hilo, y un GET en esa ventana devolvia `en_curso: false`. La
+    pantalla de mantenimiento no arrancaba su sondeo y nunca mostraba
+    "Barriendo Aduanet…" ni el aviso de fin. `ejecutar_ingesta()` lo vuelve a
+    poner a False en su `finally`.
+    """
+    _progreso.clear()
+    _progreso.update({"en_curso": True, "inicio": _ahora(),
+                      "consultas_totales": 0, "consultas_hechas": 0,
+                      "declaraciones": 0, "importador_actual": None, "errores": 0})
+
+
+def marcar_fallo_arranque() -> None:
+    """Libera `en_curso` si el hilo del barrido nunca llego a arrancar."""
+    _progreso.update({"en_curso": False, "importador_actual": None})
+
+
 def _ahora() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -422,6 +442,13 @@ def ejecutar_ingesta(
         _guardar_estado(estado)
 
         return resultado
+    except Exception as exc:
+        # Si el barrido aborta (padron vacio, rango invalido, error inesperado)
+        # no se guarda ningun resultado: sin esta marca la pantalla anunciaba
+        # "Ingesta de Aduanet finalizada." mostrando la ejecucion anterior.
+        # marcar_encolado() la borra al lanzar la siguiente.
+        _progreso["fallo"] = str(exc)
+        raise
     finally:
         _progreso.update({"en_curso": False, "importador_actual": None})
         _ejecucion_lock.release()

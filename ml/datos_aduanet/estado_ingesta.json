@@ -1,18 +1,18 @@
 {
-  "ultima_ejecucion": "2026-09-08T03:51:39+00:00",
+  "ultima_ejecucion": "2026-10-18T17:18:47+00:00",
   "ultimo_resultado": {
-    "inicio": "2026-09-08T03:48:17+00:00",
-    "fin": "2026-09-08T03:51:39+00:00",
-    "duracion_s": 202.0,
-    "desde": "2026-05-10",
-    "hasta": "2026-09-07",
+    "inicio": "2026-10-18T17:15:12+00:00",
+    "fin": "2026-10-18T17:18:47+00:00",
+    "duracion_s": 215.0,
+    "desde": "2026-06-20",
+    "hasta": "2026-10-18",
     "importadores_consultados": 166,
     "partidas": [
       "4011101000"
     ],
-    "declaraciones_descargadas": 734,
-    "declaraciones_nuevas": 719,
-    "declaraciones_acumuladas": 734,
+    "declaraciones_descargadas": 654,
+    "declaraciones_nuevas": 209,
+    "declaraciones_acumuladas": 943,
     "errores": [],
     "n_errores": 0,
     "serie_mensual": [
@@ -33,43 +33,59 @@
       },
       {
         "mes": "2026-08",
-        "flete_unit": 0.4393283201701657,
+        "flete_unit": 0.43935118033789444,
         "declaraciones": 177
       },
       {
         "mes": "2026-09",
-        "flete_unit": 0.3930908425598825,
-        "declaraciones": 33
+        "flete_unit": 0.3961092398507902,
+        "declaraciones": 158
+      },
+      {
+        "mes": "2026-10",
+        "flete_unit": 0.5059623265088035,
+        "declaraciones": 82
       }
     ],
     "rezagos": {
       "ok": true,
-      "lag1": 0.439328,
-      "lag2": 0.366417,
-      "lag3": 0.245565,
-      "vigente_hasta": "2026-08",
+      "lag1": 0.396109,
+      "lag2": 0.439351,
+      "lag3": 0.366417,
+      "vigente_hasta": "2026-09",
       "meses": [
+        "2026-09",
         "2026-08",
-        "2026-07",
-        "2026-06"
+        "2026-07"
       ],
       "declaraciones_por_mes": {
+        "2026-09": 158,
         "2026-08": 177,
-        "2026-07": 176,
-        "2026-06": 199
+        "2026-07": 176
       }
     },
     "aplicado": true,
     "motivo_no_aplicado": null,
     "estado_mercado": {
-      "lag1": 0.439328,
-      "lag2": 0.366417,
-      "lag3": 0.245565,
-      "vigente_hasta": "2026-08",
-      "origen": "manual"
+      "lag1": 0.396109,
+      "lag2": 0.439351,
+      "lag3": 0.366417,
+      "vigente_hasta": "2026-09",
+      "origen": "ingesta_aduanet"
     }
   },
   "historial": [
+    {
+      "fin": "2026-10-18T17:18:47+00:00",
+      "desde": "2026-06-20",
+      "hasta": "2026-10-18",
+      "declaraciones_nuevas": 209,
+      "declaraciones_acumuladas": 943,
+      "n_errores": 0,
+      "aplicado": true,
+      "motivo_no_aplicado": null,
+      "duracion_s": 215.0
+    },
     {
       "fin": "2026-09-08T03:51:39+00:00",
       "desde": "2026-05-10",
@@ -93,5 +109,5 @@
       "duracion_s": 2.1
     }
   ],
-  "ultima_ejecucion_programada": null
+  "ultima_ejecucion_programada": "2026-10-18"
 }
