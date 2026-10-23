@@ -25,6 +25,12 @@ class Settings(BaseSettings):
 
     DESTINATION_PORT: str = "Callao (PE)"
 
+    # Desfase horario del negocio (Lima, UTC-5, sin horario de verano). Los
+    # filtros por fecha del historial interpretan "dia" en esta hora, no en UTC:
+    # una cotizacion creada a las 21:00 en Lima es de ese dia, aunque en UTC ya
+    # sea el siguiente.
+    BUSINESS_UTC_OFFSET_HOURS: int = -5
+
     # Planificador semanal de la ingesta de Aduanet (ml/ingesta_scheduler.py).
     # Ponerlo en False en todos los workers menos uno si se despliega con
     # varios: cada proceso arranca su propio bucle y todos barrerian a la vez.

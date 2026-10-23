@@ -40,6 +40,11 @@ async def authenticate_user(
     # Verificar bloqueo
     if user.locked_until and user.locked_until > datetime.now(timezone.utc):
         raise ValueError("account_locked")
+    if user.locked_until:
+        # El bloqueo ya venció: se empieza de cero, de modo que el primer error
+        # posterior cuente como intento 1 y no como el 6.º (HU-05-2).
+        user.failed_attempts = 0
+        user.locked_until = None
 
     if not verify_password(password, user.password_hash):
         await _record_failed_attempt(db, user, ip)
@@ -173,6 +178,11 @@ async def reset_password(
 
     user.password_hash = hash_password(new_password)
     user.updated_at = datetime.now(timezone.utc)
+    # Cambiar la clave invalida las sesiones previas y levanta cualquier
+    # bloqueo por intentos fallidos (HU-03-1).
+    user.token_version = int(user.token_version or 0) + 1
+    user.failed_attempts = 0
+    user.locked_until = None
     reset_token.used = True
     await db.commit()
     await audit_service.registrar(

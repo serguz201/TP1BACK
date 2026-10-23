@@ -22,6 +22,11 @@ class Quotation(Base):
     unidades: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     volumen_cbm: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     fecha_embarque: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    # 'semanal' | 'mensual' | 'anual'. Sin el, `fecha_embarque` (fecha
+    # representativa: lunes de la semana, dia 1 del mes o 1 de enero) se leia
+    # como un embarque puntual. Nullable: filas previas a la migracion 006 y
+    # cotizaciones sin periodo.
+    periodo: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
 
     # Resultado del modelo
     flete_estimado_usd: Mapped[float] = mapped_column(Float, nullable=False)

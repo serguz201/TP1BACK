@@ -61,6 +61,9 @@ class QuotationResponse(BaseModel):
     unidades: Optional[int]
     volumen_cbm: Optional[float]
     fecha_embarque: Optional[str]
+    # 'semanal' | 'mensual' | 'anual'; null en cotizaciones sin periodo o
+    # anteriores a la migracion 006.
+    periodo: Optional[str] = None
     flete_estimado_usd: float
     flete_unitario_usd: Optional[float]
     ic95_min: float

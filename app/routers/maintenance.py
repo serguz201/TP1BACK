@@ -244,14 +244,35 @@ async def ingesta_run(request: Request, body: IngestaRunRequest, usuario=Depends
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Rango invalido: {body.desde} es posterior a {body.hasta}.",
         )
+    # QA v2.0 (HU-35-2): sin importadores activos el barrido abortaba en el
+    # hilo antes de que este 202 llegara al navegador; el primer GET ya veia
+    # en_curso=false y la pantalla nunca mostraba el motivo. Se rechaza aqui,
+    # de forma sincrona, para que el aviso llegue en la propia respuesta.
+    if not ingesta_config.importadores_activos():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "La ingesta de Aduanet no se completó: el padron de importadores "
+                "no tiene ningun importador activo, asi que no hay nada que barrer. "
+                "Anada o active importadores en el padron."
+            ),
+        )
+
+    # Se marca en_curso aqui, antes del 202, igual que el reentrenamiento (H-09).
+    ingesta_mercado.marcar_encolado()
 
     async def _correr():
         try:
             await asyncio.to_thread(
                 ingesta_mercado.ejecutar_ingesta, body.desde, body.hasta, body.aplicar
             )
+        except ingesta_mercado.IngestaEnCursoError:
+            # La otra ejecucion (p. ej. la programada) es la duena de en_curso
+            # y lo liberara en su `finally`.
+            logger.warning("Ingesta manual descartada: ya habia una en curso.")
         except Exception:
             logger.exception("Fallo la ingesta manual de Aduanet.")
+            ingesta_mercado.marcar_fallo_arranque()
 
     asyncio.create_task(_correr())
     await audit_service.registrar(

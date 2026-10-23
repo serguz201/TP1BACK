@@ -1,8 +1,11 @@
 """Genera PDF de cotización con fpdf2."""
 
 import unicodedata
+from datetime import date, timedelta, timezone
 
 from fpdf import FPDF
+
+from app.config import settings
 
 # Las fuentes "core" de fpdf2 (Helvetica y compañía) solo admiten latin-1.
 #
@@ -36,6 +39,27 @@ def _latin1(texto) -> str:
         return normal.encode("latin-1", "ignore").decode("latin-1")
 
 
+def periodo_texto(periodo, fecha_embarque) -> str | None:
+    """Texto legible del periodo cotizado, p. ej. "Anual 2027".
+
+    `fecha_embarque` es solo la fecha REPRESENTATIVA del periodo (lunes de la
+    semana ISO, dia 1 del mes o 1 de enero); mostrarla sola hacia pasar una
+    cotizacion anual por un embarque del 1 de enero. Devuelve None si no hay
+    periodo registrado (cotizacion sin periodo o anterior a la migracion 006).
+    """
+    if not periodo or not fecha_embarque:
+        return None
+    anio, mes, dia = (int(p) for p in fecha_embarque.split("-"))
+    if periodo == "anual":
+        return f"Anual {anio}"
+    if periodo == "mensual":
+        return f"Mensual {mes:02d}/{anio}"
+    if periodo == "semanal":
+        anio_iso, semana, _ = date(anio, mes, dia).isocalendar()
+        return f"Semanal: semana {semana} de {anio_iso} (desde {dia:02d}/{mes:02d}/{anio})"
+    return None
+
+
 def generate_quotation_pdf(quotation) -> bytes:
     pdf = FPDF()
     pdf.add_page()
@@ -56,7 +80,12 @@ def generate_quotation_pdf(quotation) -> bytes:
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Helvetica", "B", 12)
     pdf.cell(95, 8, _latin1(f"Cotizacion: {quotation.code}"), ln=False)
-    fecha = quotation.created_at.strftime("%d/%m/%Y %H:%M")
+    # Hora del negocio (Lima), la misma del código y del Historial.
+    creada = quotation.created_at
+    if creada.tzinfo is None:
+        creada = creada.replace(tzinfo=timezone.utc)
+    tz_negocio = timezone(timedelta(hours=settings.BUSINESS_UTC_OFFSET_HOURS))
+    fecha = creada.astimezone(tz_negocio).strftime("%d/%m/%Y %H:%M")
     pdf.cell(95, 8, f"Fecha: {fecha}", align="R", ln=True)
     pdf.ln(2)
     pdf.set_draw_color(200, 200, 200)
@@ -83,7 +112,10 @@ def generate_quotation_pdf(quotation) -> bytes:
         rows.append(("Unidades:", str(quotation.unidades)))
     if quotation.volumen_cbm:
         rows.append(("Volumen:", f"{quotation.volumen_cbm:.1f} CBM"))
-    if quotation.fecha_embarque:
+    periodo = periodo_texto(getattr(quotation, "periodo", None), quotation.fecha_embarque)
+    if periodo:
+        rows.append(("Periodo de Embarque:", periodo))
+    elif quotation.fecha_embarque:
         rows.append(("Fecha de Embarque:", quotation.fecha_embarque))
 
     for label, value in rows:

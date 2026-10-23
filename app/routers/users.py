@@ -5,8 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import func
-
 from app.core.dependencies import get_db, require_roles
 from app.core.security import hash_password
 from app.models.user import User
@@ -18,25 +16,14 @@ router = APIRouter(prefix="/api/users", tags=["Usuarios"])
 PASSWORD_RE = re.compile(r"^(?=.*[A-Z])(?=.*\d).{8,}$")
 
 
-async def _contar_admins_activos(db: AsyncSession, excluyendo: uuid.UUID) -> int:
-    """Admins activos distintos de `excluyendo`.
-
-    H-03. `PUT /{id}` y `PATCH /{id}/disable` permitian que el unico
-    administrador se degradara o se desactivara a si mismo. El sistema quedaba
-    sin ninguna cuenta capaz de volver a asignar el rol: la unica salida era un
-    UPDATE directo contra PostgreSQL. Se cuenta aqui para poder rechazar la
-    operacion antes de aplicarla.
-    """
-    result = await db.execute(
-        select(func.count())
-        .select_from(User)
-        .where(
-            User.role == "admin",
-            User.status == "active",
-            User.id != excluyendo,
-        )
-    )
-    return int(result.scalar_one())
+# H-03. `PUT /{id}` y `PATCH /{id}/disable` permitian que el unico
+# administrador se degradara o se desactivara a si mismo, dejando el sistema sin
+# ninguna cuenta capaz de reasignar el rol. Basta con prohibir la operacion
+# sobre la PROPIA cuenta: quien llama a estos endpoints es siempre un admin
+# activo (require_roles + get_current_user), asi que si el objetivo es OTRA
+# cuenta, despues de la operacion sigue quedando al menos un admin activo —el
+# que la ejecuta—. Una comprobacion adicional de "unico administrador activo"
+# era inalcanzable y se elimino.
 
 
 @router.get("", response_model=UserListResponse)
@@ -96,26 +83,15 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
-    # H-03: nadie se quita su propio rol de admin, y el ultimo admin activo
-    # tampoco puede ser degradado por otro. Sin esto el sistema se queda sin
-    # ninguna cuenta capaz de reasignar el rol.
-    if body.role and body.role != user.role and user.role == "admin":
-        if user.id == current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "No puedes cambiar tu propio rol de administrador: perderias "
-                    "el acceso a la gestion de usuarios de inmediato."
-                ),
-            )
-        if await _contar_admins_activos(db, excluyendo=user.id) == 0:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "Es el unico administrador activo. Asigne el rol de "
-                    "administrador a otra cuenta antes de cambiar el de esta."
-                ),
-            )
+    # H-03: nadie se quita su propio rol de admin (ver nota al inicio).
+    if body.role and body.role != user.role and user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "No puedes cambiar tu propio rol de administrador: perderias "
+                "el acceso a la gestion de usuarios de inmediato."
+            ),
+        )
 
     cambios: dict = {}
     if body.name and body.name != user.name:
@@ -151,23 +127,14 @@ async def disable_user(
     # H-03: mismo razonamiento que en update_user. Desactivarse a uno mismo
     # invalida la sesion en la siguiente peticion (get_current_user exige
     # status == 'active'), asi que se bloquea explicitamente.
-    if user.status == "active":
-        if user.id == current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "No puedes desactivar tu propia cuenta: perderias el acceso "
-                    "al sistema de inmediato."
-                ),
-            )
-        if user.role == "admin" and await _contar_admins_activos(db, excluyendo=user.id) == 0:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "Es el unico administrador activo. Active otra cuenta de "
-                    "administrador antes de desactivar esta."
-                ),
-            )
+    if user.status == "active" and user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "No puedes desactivar tu propia cuenta: perderias el acceso "
+                "al sistema de inmediato."
+            ),
+        )
 
     user.status = "inactive" if user.status == "active" else "active"
     await db.commit()

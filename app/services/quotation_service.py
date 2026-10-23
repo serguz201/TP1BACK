@@ -2,12 +2,13 @@
 
 import math
 import uuid
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models.audit_log import AuditLog
 from app.models.quotation import Quotation
 from app.models.user import User
@@ -16,7 +17,11 @@ from app.services import prediction_service
 
 
 def _generate_code() -> str:
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    # La fecha del codigo es la del negocio (Lima), la misma que muestran el
+    # Historial y su filtro por fechas. En UTC, una cotizacion creada a las
+    # 21:00 en Lima llevaba en el codigo la fecha del dia siguiente.
+    tz_negocio = timezone(timedelta(hours=settings.BUSINESS_UTC_OFFSET_HOURS))
+    today = datetime.now(tz_negocio).strftime("%Y%m%d")
     suffix = str(uuid.uuid4())[:4].upper()
     return f"JPS-{today}-{suffix}"
 
@@ -58,6 +63,8 @@ async def create_quotation(
         unidades=data.unidades,
         volumen_cbm=data.volumen_cbm,
         fecha_embarque=data.fecha_embarque,
+        # Sin fecha no hay periodo que mostrar: el modelo cotiza a hoy.
+        periodo=data.periodo if data.fecha_embarque else None,
         flete_estimado_usd=flete_estimado,
         flete_unitario_usd=flete_unitario,
         ic95_min=prediccion["ic95_min"],
@@ -110,17 +117,19 @@ async def list_quotations(
         stmt = stmt.where(Quotation.code.ilike(f"%{search}%"))
     if origen and origen != "All":
         stmt = stmt.where(Quotation.puerto_origen == origen)
-    # H-16: las fechas llegan ya validadas por Pydantic como `date`; se
-    # convierten a instantes UTC para comparar contra un TIMESTAMPTZ.
+    # H-16: las fechas llegan ya validadas por Pydantic como `date`. Se
+    # interpretan en la hora del negocio (Lima), que es la que ve el usuario en
+    # el Historial, y se comparan como instantes contra el TIMESTAMPTZ.
+    tz_negocio = timezone(timedelta(hours=settings.BUSINESS_UTC_OFFSET_HOURS))
     if date_from:
         stmt = stmt.where(
             Quotation.created_at
-            >= datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+            >= datetime.combine(date_from, time.min, tzinfo=tz_negocio)
         )
     if date_to:
         stmt = stmt.where(
             Quotation.created_at
-            <= datetime.combine(date_to, time.max, tzinfo=timezone.utc)
+            <= datetime.combine(date_to, time.max, tzinfo=tz_negocio)
         )
     if estado:
         stmt = stmt.where(Quotation.estado == estado)

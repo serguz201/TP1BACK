@@ -1,9 +1,9 @@
 """Cálculo de KPIs y datos para el dashboard analítico."""
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -13,6 +13,19 @@ from app.models.quotation import Quotation
 # (predictor.recargar_artifacts(), BUG 4) dejaba este dashboard sirviendo el
 # MAPE del modelo anterior.
 from ml import predictor
+
+
+def mes_negocio(instante):
+    """Primer dia del mes de `instante` (TIMESTAMPTZ) en la hora del negocio.
+
+    timezone('UTC', timestamptz) da la hora UTC sin zona, independiente de la
+    zona de la sesion de la BD; sumarle el desfase la lleva a la hora de Lima.
+    """
+    return func.date_trunc(
+        "month",
+        func.timezone("UTC", instante)
+        + literal(timedelta(hours=settings.BUSINESS_UTC_OFFSET_HOURS)),
+    )
 
 
 async def get_dashboard_data(db: AsyncSession) -> dict:
@@ -56,18 +69,27 @@ async def get_dashboard_data(db: AsyncSession) -> dict:
     ).scalar_one()
 
     # ── Tendencia de los ultimos 6 meses ───────────────────────────────────
-    now = datetime.now(timezone.utc)
+    # Los meses se cuentan por calendario. Antes se restaban 30 dias por mes, y
+    # un dia 31 (o el 1 de marzo) generaba dos veces la misma clave: el
+    # diccionario las fundia y el grafico mostraba 5 meses en vez de 6.
+    # El mes de cada cotizacion se toma en la hora del negocio (Lima), la misma
+    # que muestra el Historial: en UTC (o en la zona de la sesion de la BD) una
+    # cotizacion guardada de noche el ultimo dia del mes caia en el siguiente.
+    tz_negocio = timezone(timedelta(hours=settings.BUSINESS_UTC_OFFSET_HOURS))
+    now = datetime.now(tz_negocio)
     trend: dict[str, dict] = {}
     for i in range(5, -1, -1):
-        d = now - timedelta(days=30 * i)
-        key = d.strftime("%b %Y")
+        idx_mes = now.year * 12 + (now.month - 1) - i
+        key = datetime(idx_mes // 12, idx_mes % 12 + 1, 1).strftime("%b %Y")
         trend[key] = {"mes": key, "estimado": 0.0, "real": None}
+    _total = now.year * 12 + (now.month - 1) - 5
+    inicio_ventana = datetime(_total // 12, _total % 12 + 1, 1, tzinfo=tz_negocio)
 
-    _mes = func.date_trunc("month", Quotation.created_at)
+    _mes = mes_negocio(Quotation.created_at)
     filas_mes = (
         await db.execute(
             select(_mes, func.avg(Quotation.flete_estimado_usd), func.avg(Quotation.costo_real_usd))
-            .where(Quotation.created_at >= now - timedelta(days=200))
+            .where(Quotation.created_at >= inicio_ventana)
             .group_by(_mes)
         )
     ).all()
