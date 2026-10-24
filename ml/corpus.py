@@ -47,6 +47,7 @@ from __future__ import annotations
 import json
 import shutil
 import threading
+import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -118,9 +119,29 @@ class InformeValidacion:
 # Lectura
 # ──────────────────────────────────────────────────────────────────────────────
 
+CORPUS_BASE_ZIP = BACKEND_DIR / "resultado_combinado.zip"
+
+
+def asegurar_corpus_base() -> None:
+    """Si el CSV base no esta pero si el .zip del repo, lo descomprime.
+
+    En Render el repo solo trae `resultado_combinado.zip`; el .csv no existe
+    hasta que se extrae. Es idempotente: si el CSV ya esta, no hace nada.
+    """
+    if CORPUS_BASE.exists() or not CORPUS_BASE_ZIP.exists():
+        return
+    with zipfile.ZipFile(CORPUS_BASE_ZIP) as z:
+        nombre = next(n for n in z.namelist() if n.lower().endswith(".csv"))
+        with z.open(nombre) as src, open(CORPUS_BASE, "wb") as dst:
+            shutil.copyfileobj(src, dst)
+
+
 def ruta_corpus() -> Path:
     """CSV que deben consumir los scripts de entrenamiento."""
-    return CORPUS_ACTIVO if CORPUS_ACTIVO.exists() else CORPUS_BASE
+    if CORPUS_ACTIVO.exists():
+        return CORPUS_ACTIVO
+    asegurar_corpus_base()
+    return CORPUS_BASE
 
 
 def _leer_csv(path_o_buffer, encoding: str = "utf-8", **kw) -> pd.DataFrame:
