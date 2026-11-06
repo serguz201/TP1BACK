@@ -55,7 +55,11 @@ from typing import Optional
 import pandas as pd
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-CORPUS_BASE = BACKEND_DIR / "resultado_combinado.csv"
+_CSV_BASE = BACKEND_DIR / "resultado_combinado.csv"
+_ZIP_BASE = BACKEND_DIR / "resultado_combinado.zip"
+# El corpus base puede estar como .csv o comprimido en .zip (pandas lee .zip
+# de forma transparente si contiene un solo archivo). Se prefiere el .csv.
+CORPUS_BASE = _CSV_BASE if (_CSV_BASE.exists() or not _ZIP_BASE.exists()) else _ZIP_BASE
 CORPUS_DIR = BACKEND_DIR / "ml" / "datos_corpus"
 CORPUS_ACTIVO = CORPUS_DIR / "corpus_entrenamiento.csv"
 MANIFIESTO = CORPUS_DIR / "manifiesto.json"
@@ -437,6 +441,17 @@ def estado() -> dict:
         firma = None
     if firma is not None and _cache_estado is not None and _cache_estado[0] == firma:
         return dict(_cache_estado[1])
+
+    if not ruta.exists():
+        # Sin corpus en el servidor: se informa en vez de reventar con un 500.
+        return {
+            "ruta": ruta.name, "es_corpus_base": ruta == CORPUS_BASE,
+            "filas": 0, "filas_en_alcance": 0, "fecha_min": None,
+            "fecha_max": None, "fecha_max_en_alcance": None,
+            "n_importadores": 0, "n_puertos": 0,
+            "incorporaciones": [], "respaldos": [],
+            "error": f"Corpus no encontrado en el servidor: {ruta.name}",
+        }
 
     df = _leer_csv(ruta)
     fechas = pd.to_datetime(df["FECHA"], format="%Y%m%d", errors="coerce")
