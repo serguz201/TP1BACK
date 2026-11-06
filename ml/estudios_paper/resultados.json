@@ -18,6 +18,12 @@
       "val": 13028,
       "test": 20891
     },
+    "declaraciones": {
+      "alcance": 6538,
+      "modelado": 6177,
+      "bloque_entrenamiento": 4732,
+      "test": 1445
+    },
     "rango_fechas_particion": {
       "train": [
         "2021-04-02",
@@ -523,6 +529,7 @@
       }
     ],
     "mape_modelo_completo": 28.0,
+    "n_declaraciones_test": 1445,
     "comparaciones_pareadas_vs_completo": {
       "solo mercado_ma3 (1 feature)": {
         "delta_MAPE_pp": 14.85,
@@ -531,7 +538,20 @@
           15.67
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            39.19,
+            46.4
+          ],
+          "delta_medio_pp": 14.79,
+          "IC95_delta": [
+            10.98,
+            18.65
+          ],
+          "p_valor_bootstrap": 0.0,
+          "significativo_95": true
+        }
       },
       "solo mercado_lag1 (1 feature)": {
         "delta_MAPE_pp": -1.37,
@@ -540,7 +560,20 @@
           -0.98
         ],
         "p_valor_bootstrap": 1.0,
-        "significativo_95": false
+        "significativo_95": false,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            24.95,
+            28.07
+          ],
+          "delta_medio_pp": -1.41,
+          "IC95_delta": [
+            -3.42,
+            0.56
+          ],
+          "p_valor_bootstrap": 0.911,
+          "significativo_95": false
+        }
       },
       "solo lag1 + ma3 (2 features)": {
         "delta_MAPE_pp": 4.51,
@@ -549,7 +582,20 @@
           5.04
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            30.14,
+            34.74
+          ],
+          "delta_medio_pp": 4.46,
+          "IC95_delta": [
+            1.82,
+            7.11
+          ],
+          "p_valor_bootstrap": 0.0,
+          "significativo_95": true
+        }
       },
       "solo variables de mercado (4)": {
         "delta_MAPE_pp": 2.77,
@@ -558,7 +604,20 @@
           3.24
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            28.78,
+            32.49
+          ],
+          "delta_medio_pp": 2.73,
+          "IC95_delta": [
+            0.38,
+            5.09
+          ],
+          "p_valor_bootstrap": 0.0135,
+          "significativo_95": true
+        }
       }
     },
     "sensibilidad_a_la_semilla": {
@@ -583,6 +642,7 @@
       31337
     ],
     "referencia": "XGBoost (perdida MAE)",
+    "n_declaraciones_test": 1445,
     "tabla": [
       {
         "modelo": "LightGBM (perdida MAE)",
@@ -610,7 +670,20 @@
           -4.65
         ],
         "p_valor_bootstrap": 1.0,
-        "significativo_95": false
+        "significativo_95": false,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            21.66,
+            24.35
+          ],
+          "delta_medio_pp": -4.91,
+          "IC95_delta": [
+            -6.17,
+            -3.64
+          ],
+          "p_valor_bootstrap": 1.0,
+          "significativo_95": true
+        }
       },
       {
         "modelo": "LightGBM",
@@ -638,7 +711,20 @@
           -3.51
         ],
         "p_valor_bootstrap": 1.0,
-        "significativo_95": false
+        "significativo_95": false,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            22.82,
+            25.55
+          ],
+          "delta_medio_pp": -3.76,
+          "IC95_delta": [
+            -5.03,
+            -2.64
+          ],
+          "p_valor_bootstrap": 1.0,
+          "significativo_95": true
+        }
       },
       {
         "modelo": "CatBoost (perdida MAE)",
@@ -666,7 +752,20 @@
           -2.89
         ],
         "p_valor_bootstrap": 1.0,
-        "significativo_95": false
+        "significativo_95": false,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            23.38,
+            26.27
+          ],
+          "delta_medio_pp": -3.09,
+          "IC95_delta": [
+            -4.15,
+            -2.08
+          ],
+          "p_valor_bootstrap": 1.0,
+          "significativo_95": true
+        }
       },
       {
         "modelo": "CatBoost",
@@ -694,7 +793,20 @@
           0.11
         ],
         "p_valor_bootstrap": 0.8645,
-        "significativo_95": false
+        "significativo_95": false,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            26.16,
+            29.42
+          ],
+          "delta_medio_pp": -0.16,
+          "IC95_delta": [
+            -1.45,
+            1.02
+          ],
+          "p_valor_bootstrap": 0.587,
+          "significativo_95": false
+        }
       },
       {
         "modelo": "XGBoost (perdida MAE)",
@@ -715,7 +827,13 @@
           28.23
         ],
         "MAPE_media_semillas": 28.0,
-        "MAPE_sd_semillas": 0.24
+        "MAPE_sd_semillas": 0.24,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            26.04,
+            29.84
+          ]
+        }
       },
       {
         "modelo": "XGBoost (perdida cuadratica)",
@@ -743,7 +861,20 @@
           0.45
         ],
         "p_valor_bootstrap": 0.0015,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            26.62,
+            29.71
+          ],
+          "delta_medio_pp": 0.24,
+          "IC95_delta": [
+            -0.71,
+            1.1
+          ],
+          "p_valor_bootstrap": 0.2825,
+          "significativo_95": false
+        }
       },
       {
         "modelo": "Baseline persistencia (lag1)",
@@ -762,7 +893,20 @@
           1.24
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            26.9,
+            30.47
+          ],
+          "delta_medio_pp": 0.76,
+          "IC95_delta": [
+            -1.49,
+            2.99
+          ],
+          "p_valor_bootstrap": 0.2595,
+          "significativo_95": false
+        }
       },
       {
         "modelo": "Random Forest",
@@ -790,7 +934,20 @@
           1.9
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            27.79,
+            31.07
+          ],
+          "delta_medio_pp": 1.48,
+          "IC95_delta": [
+            -0.39,
+            3.31
+          ],
+          "p_valor_bootstrap": 0.0625,
+          "significativo_95": false
+        }
       },
       {
         "modelo": "Ridge",
@@ -809,7 +966,20 @@
           3.02
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            28.71,
+            32.09
+          ],
+          "delta_medio_pp": 2.5,
+          "IC95_delta": [
+            0.24,
+            4.62
+          ],
+          "p_valor_bootstrap": 0.016,
+          "significativo_95": true
+        }
       },
       {
         "modelo": "Baseline media movil (ma3)",
@@ -828,7 +998,20 @@
           6.51
         ],
         "p_valor_bootstrap": 0.0,
-        "significativo_95": true
+        "significativo_95": true,
+        "por_declaracion": {
+          "IC95_MAPE": [
+            31.79,
+            36.08
+          ],
+          "delta_medio_pp": 5.95,
+          "IC95_delta": [
+            3.43,
+            8.46
+          ],
+          "p_valor_bootstrap": 0.0,
+          "significativo_95": true
+        }
       }
     ],
     "nota": "Cada modelo estocastico se entrena con 5 semillas y la prueba se hace sobre la prediccion PROMEDIADA entre ellas: la dispersion entre semillas es comparable a la diferencia entre algoritmos, de modo que una comparacion de una sola semilla no es concluyente. Bootstrap PAREADO sobre las filas de test (el mismo remuestreo para todos los modelos). El p-valor es la proporcion de remuestreos en que el modelo rival NO resulta peor que XGBoost."
@@ -1074,6 +1257,7 @@
         "anio": 2022,
         "trimestre": "2022-T1",
         "n": 1866,
+        "n_alcance": 2125,
         "n_entrenamiento": 9584,
         "MAPE_%": 47.48,
         "MAE": 0.5362,
@@ -1084,6 +1268,7 @@
         "anio": 2022,
         "trimestre": "2022-T1",
         "n": 1996,
+        "n_alcance": 2007,
         "n_entrenamiento": 12274,
         "MAPE_%": 15.96,
         "MAE": 0.1459,
@@ -1094,6 +1279,7 @@
         "anio": 2022,
         "trimestre": "2022-T1",
         "n": 959,
+        "n_alcance": 962,
         "n_entrenamiento": 14263,
         "MAPE_%": 26.41,
         "MAE": 0.1379,
@@ -1104,6 +1290,7 @@
         "anio": 2022,
         "trimestre": "2022-T2",
         "n": 1587,
+        "n_alcance": 1588,
         "n_entrenamiento": 15217,
         "MAPE_%": 19.49,
         "MAE": 0.1356,
@@ -1114,6 +1301,7 @@
         "anio": 2022,
         "trimestre": "2022-T2",
         "n": 1210,
+        "n_alcance": 1212,
         "n_entrenamiento": 16799,
         "MAPE_%": 35.32,
         "MAE": 0.191,
@@ -1124,6 +1312,7 @@
         "anio": 2022,
         "trimestre": "2022-T2",
         "n": 1059,
+        "n_alcance": 1102,
         "n_entrenamiento": 18011,
         "MAPE_%": 16.43,
         "MAE": 0.0872,
@@ -1134,6 +1323,7 @@
         "anio": 2022,
         "trimestre": "2022-T3",
         "n": 1216,
+        "n_alcance": 1232,
         "n_entrenamiento": 19062,
         "MAPE_%": 31.14,
         "MAE": 0.1267,
@@ -1144,6 +1334,7 @@
         "anio": 2022,
         "trimestre": "2022-T3",
         "n": 1700,
+        "n_alcance": 1700,
         "n_entrenamiento": 20276,
         "MAPE_%": 17.35,
         "MAE": 0.1212,
@@ -1154,6 +1345,7 @@
         "anio": 2022,
         "trimestre": "2022-T3",
         "n": 1227,
+        "n_alcance": 1229,
         "n_entrenamiento": 21971,
         "MAPE_%": 48.15,
         "MAE": 0.2497,
@@ -1164,6 +1356,7 @@
         "anio": 2022,
         "trimestre": "2022-T4",
         "n": 862,
+        "n_alcance": 1114,
         "n_entrenamiento": 23194,
         "MAPE_%": 101.47,
         "MAE": 0.4281,
@@ -1174,6 +1367,7 @@
         "anio": 2022,
         "trimestre": "2022-T4",
         "n": 763,
+        "n_alcance": 1464,
         "n_entrenamiento": 24052,
         "MAPE_%": 31.63,
         "MAE": 0.1001,
@@ -1184,6 +1378,7 @@
         "anio": 2022,
         "trimestre": "2022-T4",
         "n": 663,
+        "n_alcance": 1584,
         "n_entrenamiento": 24870,
         "MAPE_%": 20.15,
         "MAE": 0.0592,
@@ -1194,6 +1389,7 @@
         "anio": 2023,
         "trimestre": "2023-T1",
         "n": 98,
+        "n_alcance": 1480,
         "n_entrenamiento": 25526,
         "MAPE_%": 124.27,
         "MAE": 0.2458,
@@ -1204,6 +1400,7 @@
         "anio": 2023,
         "trimestre": "2023-T1",
         "n": 52,
+        "n_alcance": 1048,
         "n_entrenamiento": 25607,
         "MAPE_%": 91.06,
         "MAE": 0.1254,
@@ -1214,6 +1411,7 @@
         "anio": 2023,
         "trimestre": "2023-T1",
         "n": 43,
+        "n_alcance": 1111,
         "n_entrenamiento": 25657,
         "MAPE_%": 96.58,
         "MAE": 0.1045,
@@ -1224,6 +1422,7 @@
         "anio": 2023,
         "trimestre": "2023-T2",
         "n": 118,
+        "n_alcance": 988,
         "n_entrenamiento": 25835,
         "MAPE_%": 278.68,
         "MAE": 0.3117,
@@ -1234,6 +1433,7 @@
         "anio": 2023,
         "trimestre": "2023-T2",
         "n": 339,
+        "n_alcance": 1556,
         "n_entrenamiento": 27513,
         "MAPE_%": 90.25,
         "MAE": 0.1867,
@@ -1244,6 +1444,7 @@
         "anio": 2023,
         "trimestre": "2023-T2",
         "n": 1276,
+        "n_alcance": 1343,
         "n_entrenamiento": 29562,
         "MAPE_%": 39.26,
         "MAE": 0.0776,
@@ -1254,6 +1455,7 @@
         "anio": 2023,
         "trimestre": "2023-T3",
         "n": 1387,
+        "n_alcance": 1551,
         "n_entrenamiento": 31520,
         "MAPE_%": 44.64,
         "MAE": 0.0876,
@@ -1264,6 +1466,7 @@
         "anio": 2023,
         "trimestre": "2023-T3",
         "n": 1482,
+        "n_alcance": 1550,
         "n_entrenamiento": 34175,
         "MAPE_%": 61.38,
         "MAE": 0.1017,
@@ -1274,6 +1477,7 @@
         "anio": 2023,
         "trimestre": "2023-T3",
         "n": 1399,
+        "n_alcance": 1419,
         "n_entrenamiento": 37178,
         "MAPE_%": 60.17,
         "MAE": 0.1062,
@@ -1284,6 +1488,7 @@
         "anio": 2023,
         "trimestre": "2023-T4",
         "n": 1501,
+        "n_alcance": 1522,
         "n_entrenamiento": 39103,
         "MAPE_%": 60.27,
         "MAE": 0.0999,
@@ -1294,6 +1499,7 @@
         "anio": 2023,
         "trimestre": "2023-T4",
         "n": 1568,
+        "n_alcance": 1602,
         "n_entrenamiento": 40689,
         "MAPE_%": 66.07,
         "MAE": 0.0993,
@@ -1304,6 +1510,7 @@
         "anio": 2023,
         "trimestre": "2023-T4",
         "n": 1194,
+        "n_alcance": 1210,
         "n_entrenamiento": 42256,
         "MAPE_%": 21.68,
         "MAE": 0.0306,
@@ -1314,6 +1521,7 @@
         "anio": 2024,
         "trimestre": "2024-T1",
         "n": 1296,
+        "n_alcance": 1369,
         "n_entrenamiento": 43441,
         "MAPE_%": 17.76,
         "MAE": 0.025,
@@ -1324,6 +1532,7 @@
         "anio": 2024,
         "trimestre": "2024-T1",
         "n": 1042,
+        "n_alcance": 1107,
         "n_entrenamiento": 44728,
         "MAPE_%": 20.56,
         "MAE": 0.0371,
@@ -1334,6 +1543,7 @@
         "anio": 2024,
         "trimestre": "2024-T1",
         "n": 662,
+        "n_alcance": 700,
         "n_entrenamiento": 45805,
         "MAPE_%": 16.0,
         "MAE": 0.0306,
@@ -1344,6 +1554,7 @@
         "anio": 2024,
         "trimestre": "2024-T2",
         "n": 1191,
+        "n_alcance": 1218,
         "n_entrenamiento": 46463,
         "MAPE_%": 14.69,
         "MAE": 0.029,
@@ -1354,6 +1565,7 @@
         "anio": 2024,
         "trimestre": "2024-T2",
         "n": 1405,
+        "n_alcance": 1421,
         "n_entrenamiento": 47655,
         "MAPE_%": 21.13,
         "MAE": 0.0428,
@@ -1364,6 +1576,7 @@
         "anio": 2024,
         "trimestre": "2024-T2",
         "n": 1794,
+        "n_alcance": 1812,
         "n_entrenamiento": 49054,
         "MAPE_%": 37.97,
         "MAE": 0.1305,
@@ -1374,6 +1587,7 @@
         "anio": 2024,
         "trimestre": "2024-T3",
         "n": 1333,
+        "n_alcance": 1401,
         "n_entrenamiento": 50868,
         "MAPE_%": 52.43,
         "MAE": 0.2572,
@@ -1384,6 +1598,7 @@
         "anio": 2024,
         "trimestre": "2024-T3",
         "n": 1515,
+        "n_alcance": 1515,
         "n_entrenamiento": 52196,
         "MAPE_%": 51.27,
         "MAE": 0.2909,
@@ -1394,6 +1609,7 @@
         "anio": 2024,
         "trimestre": "2024-T3",
         "n": 1890,
+        "n_alcance": 1905,
         "n_entrenamiento": 53730,
         "MAPE_%": 55.89,
         "MAE": 0.1564,
@@ -1404,6 +1620,7 @@
         "anio": 2024,
         "trimestre": "2024-T4",
         "n": 1923,
+        "n_alcance": 2058,
         "n_entrenamiento": 55641,
         "MAPE_%": 23.19,
         "MAE": 0.0873,
@@ -1414,6 +1631,7 @@
         "anio": 2024,
         "trimestre": "2024-T4",
         "n": 2033,
+        "n_alcance": 2045,
         "n_entrenamiento": 57672,
         "MAPE_%": 25.55,
         "MAE": 0.0741,
@@ -1424,6 +1642,7 @@
         "anio": 2024,
         "trimestre": "2024-T4",
         "n": 1585,
+        "n_alcance": 1587,
         "n_entrenamiento": 59779,
         "MAPE_%": 17.52,
         "MAE": 0.0445,
@@ -1434,6 +1653,7 @@
         "anio": 2025,
         "trimestre": "2025-T1",
         "n": 2079,
+        "n_alcance": 2085,
         "n_entrenamiento": 61406,
         "MAPE_%": 20.16,
         "MAE": 0.0429,
@@ -1444,6 +1664,7 @@
         "anio": 2025,
         "trimestre": "2025-T1",
         "n": 1436,
+        "n_alcance": 1442,
         "n_entrenamiento": 63423,
         "MAPE_%": 23.68,
         "MAE": 0.0557,
@@ -1454,6 +1675,7 @@
         "anio": 2025,
         "trimestre": "2025-T1",
         "n": 1391,
+        "n_alcance": 1407,
         "n_entrenamiento": 64917,
         "MAPE_%": 20.2,
         "MAE": 0.0311,
@@ -1464,6 +1686,7 @@
         "anio": 2025,
         "trimestre": "2025-T2",
         "n": 1542,
+        "n_alcance": 1579,
         "n_entrenamiento": 66366,
         "MAPE_%": 16.83,
         "MAE": 0.0306,
@@ -1474,6 +1697,7 @@
         "anio": 2025,
         "trimestre": "2025-T2",
         "n": 1605,
+        "n_alcance": 1645,
         "n_entrenamiento": 67839,
         "MAPE_%": 36.96,
         "MAE": 0.0537,
@@ -1484,6 +1708,7 @@
         "anio": 2025,
         "trimestre": "2025-T2",
         "n": 1614,
+        "n_alcance": 1620,
         "n_entrenamiento": 69440,
         "MAPE_%": 51.87,
         "MAE": 0.0745,
@@ -1494,6 +1719,7 @@
         "anio": 2025,
         "trimestre": "2025-T3",
         "n": 1927,
+        "n_alcance": 1941,
         "n_entrenamiento": 71025,
         "MAPE_%": 32.88,
         "MAE": 0.103,
@@ -1504,6 +1730,7 @@
         "anio": 2025,
         "trimestre": "2025-T3",
         "n": 1651,
+        "n_alcance": 1651,
         "n_entrenamiento": 73019,
         "MAPE_%": 13.62,
         "MAE": 0.0318,
@@ -1514,6 +1741,7 @@
         "anio": 2025,
         "trimestre": "2025-T3",
         "n": 1610,
+        "n_alcance": 1616,
         "n_entrenamiento": 74639,
         "MAPE_%": 15.99,
         "MAE": 0.0329,
@@ -1524,6 +1752,7 @@
         "anio": 2025,
         "trimestre": "2025-T4",
         "n": 1966,
+        "n_alcance": 1970,
         "n_entrenamiento": 76237,
         "MAPE_%": 26.88,
         "MAE": 0.057,
@@ -1534,6 +1763,7 @@
         "anio": 2025,
         "trimestre": "2025-T4",
         "n": 1943,
+        "n_alcance": 1943,
         "n_entrenamiento": 78187,
         "MAPE_%": 23.13,
         "MAE": 0.0338,
@@ -1544,6 +1774,7 @@
         "anio": 2025,
         "trimestre": "2025-T4",
         "n": 2121,
+        "n_alcance": 2124,
         "n_entrenamiento": 80167,
         "MAPE_%": 16.25,
         "MAE": 0.0287,
@@ -1558,104 +1789,144 @@
       "2022": {
         "n": 15108,
         "MAPE_%": 32.32,
-        "meses": 12
+        "meses": 12,
+        "n_alcance": 17319,
+        "pct_excluido": 12.8
       },
       "2023": {
         "n": 10457,
         "MAPE_%": 56.58,
-        "meses": 12
+        "meses": 12,
+        "n_alcance": 16380,
+        "pct_excluido": 36.2
       },
       "2024": {
         "n": 17669,
         "MAPE_%": 31.01,
-        "meses": 12
+        "meses": 12,
+        "n_alcance": 18138,
+        "pct_excluido": 2.6
       },
       "2025": {
         "n": 20885,
         "MAPE_%": 24.75,
-        "meses": 12
+        "meses": 12,
+        "n_alcance": 21023,
+        "pct_excluido": 0.7
       }
     },
     "por_trimestre": {
       "2022-T1": {
         "n": 4821,
         "MAPE_%": 30.24,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 5094,
+        "pct_excluido": 5.4
       },
       "2022-T2": {
         "n": 3856,
         "MAPE_%": 23.62,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 3902,
+        "pct_excluido": 1.2
       },
       "2022-T3": {
         "n": 4143,
         "MAPE_%": 30.52,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4161,
+        "pct_excluido": 0.4
       },
       "2022-T4": {
         "n": 2288,
         "MAPE_%": 54.62,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4162,
+        "pct_excluido": 45.0
       },
       "2023-T1": {
         "n": 193,
         "MAPE_%": 109.15,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 3639,
+        "pct_excluido": 94.7
       },
       "2023-T2": {
         "n": 1733,
         "MAPE_%": 65.54,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 3887,
+        "pct_excluido": 55.4
       },
       "2023-T3": {
         "n": 4268,
         "MAPE_%": 55.54,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4520,
+        "pct_excluido": 5.6
       },
       "2023-T4": {
         "n": 4263,
         "MAPE_%": 51.59,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4334,
+        "pct_excluido": 1.6
       },
       "2024-T1": {
         "n": 3000,
         "MAPE_%": 18.34,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 3176,
+        "pct_excluido": 5.5
       },
       "2024-T2": {
         "n": 4390,
         "MAPE_%": 26.26,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4451,
+        "pct_excluido": 1.4
       },
       "2024-T3": {
         "n": 4738,
         "MAPE_%": 53.44,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4821,
+        "pct_excluido": 1.7
       },
       "2024-T4": {
         "n": 5541,
         "MAPE_%": 22.43,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 5690,
+        "pct_excluido": 2.6
       },
       "2025-T1": {
         "n": 4906,
         "MAPE_%": 21.2,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4934,
+        "pct_excluido": 0.6
       },
       "2025-T2": {
         "n": 4761,
         "MAPE_%": 35.49,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 4844,
+        "pct_excluido": 1.7
       },
       "2025-T3": {
         "n": 5188,
         "MAPE_%": 21.51,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 5208,
+        "pct_excluido": 0.4
       },
       "2025-T4": {
         "n": 6030,
         "MAPE_%": 21.93,
-        "meses": 3
+        "meses": 3,
+        "n_alcance": 6037,
+        "pct_excluido": 0.1
       }
     },
     "por_regimen_volatilidad": {

@@ -19,7 +19,11 @@ lo calcula.
 
 TRES BOOTSTRAP, PORQUE RESPONDEN TRES PREGUNTAS DISTINTAS
 
-  1. `por_filas` — remuestreo de las 20,885 declaraciones evaluadas, pareado:
+  0. `por_declaracion` — como (1), pero remuestreando DAM completas: cada fila
+     es una serie de una declaracion y las series de una DAM comparten el flete
+     prorrateado, asi que (1) trata como independientes filas que no lo son.
+     Es la unidad que corresponde al "muestreo de embarques" del articulo.
+  1. `por_filas` — remuestreo de las 20,885 filas (series) evaluadas, pareado:
      el mismo indice se aplica a las dos series comparadas, de modo que la
      diferencia no depende de haber usado muestras distintas. Es exactamente el
      protocolo de las Tablas VII y VIII, y responde: dada esta trayectoria de
@@ -173,6 +177,7 @@ def _pliegue_filas(scope: pd.DataFrame, mes: pd.Period, modelo_base,
         "mes": str(mes),
         "n_bloque": int(len(bloque)),
         "n_evaluado": int(len(y_test)),
+        "dam": dp.id_declaracion(p.test),
         "y": y_test,
         "preds": {k: np.asarray(v, dtype=float) for k, v in preds.items()},
     }
@@ -249,6 +254,38 @@ def _apilar(pliegues: list[dict], series: list[str]) -> tuple[np.ndarray, dict]:
         for s in series
     }
     return meses, apes
+
+
+def _dams(pliegues: list[dict], series: list[str]) -> np.ndarray:
+    """Clave de declaracion por fila, alineada con `_apilar` para las mismas series."""
+    usables = [p for p in pliegues if all(s in p["preds"] for s in series)]
+    return np.concatenate([p["dam"] for p in usables])
+
+
+def _por_declaracion(ape_a: np.ndarray, ape_b: np.ndarray, dams: np.ndarray,
+                     rng: np.random.Generator) -> dict:
+    """Bootstrap pareado de declaraciones completas (DAM con todas sus series).
+
+    Cada fila es una serie de una DAM y las series de una misma DAM comparten
+    fecha, importador, puerto y casi siempre el flete unitario, de modo que
+    `por_filas` trata como independientes observaciones que no lo son. Este es
+    el remuestreo que corresponde a la pregunta "cuanta incertidumbre hay por el
+    muestreo de embarques". Usa su propio generador para no alterar los
+    remuestreos de `por_filas` y `por_mes` ya publicados.
+    """
+    _, inv = np.unique(dams, return_inverse=True)
+    sa = np.bincount(inv, weights=ape_a)
+    sb = np.bincount(inv, weights=ape_b)
+    cnt = np.bincount(inv).astype(float)
+    sel = rng.integers(0, len(cnt), size=(N_BOOTSTRAP, len(cnt)))
+    d = (sa[sel].sum(axis=1) - sb[sel].sum(axis=1)) / cnt[sel].sum(axis=1)
+    return {
+        "delta_medio_pp": round(float(d.mean()), 2),
+        "IC95": _ic(d),
+        "p_valor_una_cola": round(float(np.mean(d <= 0)), 4),
+        "significativo_95": bool(np.percentile(d, 2.5) > 0),
+        "n_declaraciones": int(len(cnt)),
+    }
 
 
 def _ic(muestras: np.ndarray) -> list[float]:
@@ -359,18 +396,24 @@ def ejecutar(csv_path: str = CSV_PATH, verbose: bool = True) -> dict:
     ]
 
     contrastes = {}
+    rng_dam = np.random.default_rng(RANDOM_STATE)
     for nombre, peor, mejor in pares:
         if peor not in mape or mejor not in mape:
             continue
         meses, apes = _apilar(pliegues, [peor, mejor])
         c = _contraste(apes[peor], apes[mejor], meses, rng)
+        c["por_declaracion"] = _por_declaracion(
+            apes[peor], apes[mejor], _dams(pliegues, [peor, mejor]), rng_dam
+        )
         c["comparacion"] = f"{SERIES[peor]} vs {SERIES[mejor]}"
         contrastes[nombre] = c
         if verbose:
-            f, m = c["por_filas"], c["por_mes"]
+            f, m, d = c["por_filas"], c["por_mes"], c["por_declaracion"]
             print(f"\n  {nombre}: delta {c['delta_pp']:+.2f} pp")
             print(f"    por filas  IC95 [{f['IC95'][0]:+.2f}, {f['IC95'][1]:+.2f}]  "
                   f"p={f['p_valor_una_cola']:.4f}  sig={f['significativo_95']}")
+            print(f"    por DAM    IC95 [{d['IC95'][0]:+.2f}, {d['IC95'][1]:+.2f}]  "
+                  f"p={d['p_valor_una_cola']:.4f}  sig={d['significativo_95']}")
             print(f"    por mes    IC95 [{m['IC95'][0]:+.2f}, {m['IC95'][1]:+.2f}]  "
                   f"p={m['p_valor_una_cola']:.4f}  sig={m['significativo_95']}")
 
@@ -384,6 +427,11 @@ def ejecutar(csv_path: str = CSV_PATH, verbose: bool = True) -> dict:
     }
     mes_extremo = max(por_mes_delta, key=lambda k: por_mes_delta[k])
     sin_extremo = _sin_mes(apes["estatico"], apes["rodante"], meses, mes_extremo, rng)
+    _keep = meses != mes_extremo
+    sin_extremo["por_declaracion"] = _por_declaracion(
+        apes["estatico"][_keep], apes["rodante"][_keep],
+        _dams(pliegues, ["estatico", "rodante"])[_keep], rng_dam,
+    )
     if verbose:
         print(f"\n  Ganancia de reentrenar por mes: {por_mes_delta}")
         print(f"  Excluyendo {mes_extremo}: delta {sin_extremo['delta_pp']:+.2f} pp "
@@ -396,11 +444,13 @@ def ejecutar(csv_path: str = CSV_PATH, verbose: bool = True) -> dict:
             "procedimiento que ml/estudios_paper.py aplica a la comparacion de "
             "algoritmos y a la ablacion. Cada contraste se calcula sobre las filas "
             "en las que ambas series existen, con el mismo indice de remuestreo para "
-            "las dos, y se reporta en dos unidades de remuestreo: la declaracion "
-            "(`por_filas`) y el pliegue mensual (`por_mes`, bootstrap de bloques). "
-            "El segundo es el intervalo pertinente para una afirmacion sobre el "
-            "sistema, porque las declaraciones de un mismo mes comparten regimen de "
-            "mercado y no son independientes."
+            "las dos, y se reporta en tres unidades de remuestreo: la fila o serie "
+            "(`por_filas`), la declaracion completa (`por_declaracion`, DAM con todas "
+            "sus series, generador propio con semilla 42) y el pliegue mensual "
+            "(`por_mes`, bootstrap de bloques). `por_filas` subestima la "
+            "incertidumbre porque las series de una misma DAM comparten el flete "
+            "prorrateado; `por_declaracion` es la unidad de muestreo de embarques y "
+            "`por_mes` la pertinente para una afirmacion sobre el sistema."
         ),
         "n_bootstrap": N_BOOTSTRAP,
         "semilla": RANDOM_STATE,

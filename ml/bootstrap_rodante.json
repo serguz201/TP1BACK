@@ -1,5 +1,5 @@
 {
-  "procedimiento": "Bootstrap pareado con B=2,000 remuestreos y semilla 42, el mismo procedimiento que ml/estudios_paper.py aplica a la comparacion de algoritmos y a la ablacion. Cada contraste se calcula sobre las filas en las que ambas series existen, con el mismo indice de remuestreo para las dos, y se reporta en dos unidades de remuestreo: la declaracion (`por_filas`) y el pliegue mensual (`por_mes`, bootstrap de bloques). El segundo es el intervalo pertinente para una afirmacion sobre el sistema, porque las declaraciones de un mismo mes comparten regimen de mercado y no son independientes.",
+  "procedimiento": "Bootstrap pareado con B=2,000 remuestreos y semilla 42, el mismo procedimiento que ml/estudios_paper.py aplica a la comparacion de algoritmos y a la ablacion. Cada contraste se calcula sobre las filas en las que ambas series existen, con el mismo indice de remuestreo para las dos, y se reporta en tres unidades de remuestreo: la fila o serie (`por_filas`), la declaracion completa (`por_declaracion`, DAM con todas sus series, generador propio con semilla 42) y el pliegue mensual (`por_mes`, bootstrap de bloques). `por_filas` subestima la incertidumbre porque las series de una misma DAM comparten el flete prorrateado; `por_declaracion` es la unidad de muestreo de embarques y `por_mes` la pertinente para una afirmacion sobre el sistema.",
   "n_bootstrap": 2000,
   "semilla": 42,
   "n_estimators": 112,
@@ -63,6 +63,16 @@
         "p_valor_una_cola": 0.111,
         "significativo_95": false
       },
+      "por_declaracion": {
+        "delta_medio_pp": 3.75,
+        "IC95": [
+          2.62,
+          4.86
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true,
+        "n_declaraciones": 1444
+      },
       "comparacion": "modelo congelado (mismas filas) vs reentrenamiento mensual"
     },
     "coste_del_rezago_sunat": {
@@ -85,6 +95,16 @@
         ],
         "p_valor_una_cola": 0.0,
         "significativo_95": true
+      },
+      "por_declaracion": {
+        "delta_medio_pp": 7.03,
+        "IC95": [
+          5.73,
+          8.44
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true,
+        "n_declaraciones": 1444
       },
       "comparacion": "reentrenado con la estadistica un mes tarde vs reentrenamiento mensual"
     },
@@ -109,6 +129,16 @@
         "p_valor_una_cola": 0.171,
         "significativo_95": false
       },
+      "por_declaracion": {
+        "delta_medio_pp": 3.91,
+        "IC95": [
+          2.15,
+          5.59
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true,
+        "n_declaraciones": 1444
+      },
       "comparacion": "linea base: persistencia de mercado (lag1) vs reentrenamiento mensual"
     },
     "vs_media_movil_ma3": {
@@ -131,6 +161,16 @@
         ],
         "p_valor_una_cola": 0.028,
         "significativo_95": false
+      },
+      "por_declaracion": {
+        "delta_medio_pp": 9.09,
+        "IC95": [
+          7.2,
+          11.15
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true,
+        "n_declaraciones": 1444
       },
       "comparacion": "linea base: media movil de tres meses vs reentrenamiento mensual"
     },
@@ -155,6 +195,16 @@
         "p_valor_una_cola": 0.0,
         "significativo_95": true
       },
+      "por_declaracion": {
+        "delta_medio_pp": 67.45,
+        "IC95": [
+          63.47,
+          71.37
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true,
+        "n_declaraciones": 1444
+      },
       "comparacion": "linea base: mediana del bloque de entrenamiento vs reentrenamiento mensual"
     },
     "recencia_a_masa_constante": {
@@ -178,6 +228,16 @@
         "p_valor_una_cola": 0.165,
         "significativo_95": false
       },
+      "por_declaracion": {
+        "delta_medio_pp": 3.57,
+        "IC95": [
+          2.46,
+          4.78
+        ],
+        "p_valor_una_cola": 0.0,
+        "significativo_95": true,
+        "n_declaraciones": 1444
+      },
       "comparacion": "modelo congelado (mismas filas) vs reentrenado con masa de datos constante"
     },
     "masa_acumulada": {
@@ -200,6 +260,16 @@
         ],
         "p_valor_una_cola": 0.325,
         "significativo_95": false
+      },
+      "por_declaracion": {
+        "delta_medio_pp": 0.19,
+        "IC95": [
+          -0.08,
+          0.45
+        ],
+        "p_valor_una_cola": 0.085,
+        "significativo_95": false,
+        "n_declaraciones": 1444
       },
       "comparacion": "reentrenado con masa de datos constante vs reentrenamiento mensual"
     }
@@ -228,7 +298,17 @@
       0.68
     ],
     "p_valor_una_cola": 0.0,
-    "significativo_95": true
+    "significativo_95": true,
+    "por_declaracion": {
+      "delta_medio_pp": 0.53,
+      "IC95": [
+        -0.13,
+        1.22
+      ],
+      "p_valor_una_cola": 0.0665,
+      "significativo_95": false,
+      "n_declaraciones": 1339
+    }
   },
   "confound_masa_de_datos": {
     "crecimiento_del_bloque_%": 30.6,

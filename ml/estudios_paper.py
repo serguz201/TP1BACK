@@ -106,6 +106,42 @@ def _mape(y_true, y_pred) -> float:
     return float(np.mean(np.abs((y_true - y_pred) / y_true)) * 100)
 
 
+def _bootstrap_declaraciones(y_true, preds: dict, dams, ref: str | None = None) -> dict:
+    """IC95 del MAPE de cada modelo y de su diferencia con `ref`, remuestreando DAM.
+
+    Cada fila es una serie de una declaracion y las series de una misma DAM
+    comparten fecha, importador, puerto y casi siempre el flete unitario
+    (prorrateado por peso). El bootstrap por filas las trata como independientes
+    y estrecha los intervalos; este remuestrea declaraciones completas, con el
+    mismo indice para todos los modelos (pareado). Usa su propio generador para
+    no alterar los remuestreos por filas ya publicados.
+    """
+    _, inv = np.unique(dams, return_inverse=True)
+    cnt = np.bincount(inv).astype(float)
+    sel = np.random.default_rng(RANDOM_STATE).integers(0, len(cnt), size=(N_BOOTSTRAP, len(cnt)))
+    den = cnt[sel].sum(axis=1)
+    bs = {
+        k: 100 * np.bincount(inv, weights=np.abs((y_true - v) / y_true))[sel].sum(axis=1) / den
+        for k, v in preds.items()
+    }
+    out = {}
+    for k, b in bs.items():
+        r = {"IC95_MAPE": [round(float(np.percentile(b, 2.5)), 2),
+                           round(float(np.percentile(b, 97.5)), 2)]}
+        if ref is not None and k != ref:
+            d = b - bs[ref]
+            r.update({
+                "delta_medio_pp": round(float(d.mean()), 2),
+                "IC95_delta": [round(float(np.percentile(d, 2.5)), 2),
+                               round(float(np.percentile(d, 97.5)), 2)],
+                "p_valor_bootstrap": round(float(np.mean(d <= 0)), 4),
+                "significativo_95": bool(np.percentile(d, 2.5) > 0 or np.percentile(d, 97.5) < 0),
+            })
+        out[k] = r
+    out["_n_declaraciones"] = int(len(cnt))
+    return out
+
+
 # Numero de arboles de la receta de produccion. Se calcula una sola vez, con
 # el mismo selector y sobre el mismo bloque que train_model.py, y se memoiza:
 # si estas funciones divergieran de la receta desplegada, la ablacion y la
@@ -244,6 +280,13 @@ def etapa_dataset(p) -> dict:
         "filas_tras_recorte_y_lags": int(len(todo)),
         "particion": {
             "train": int(len(p.train)), "val": int(len(p.val)), "test": int(len(p.test))
+        },
+        # Cada fila es una SERIE de una DAM; estas son las declaraciones reales.
+        "declaraciones": {
+            "alcance": int(len(set(dp.id_declaracion(scope.assign(FECHA=scope["FECHA_dt"]))))),
+            "modelado": int(len(set(dp.id_declaracion(todo)))),
+            "bloque_entrenamiento": int(len(set(dp.id_declaracion(pd.concat([p.train, p.val]))))),
+            "test": int(len(set(dp.id_declaracion(p.test)))),
         },
         "rango_fechas_particion": {
             "train": [str(p.train["FECHA"].min().date()), str(p.train["FECHA"].max().date())],
@@ -385,10 +428,23 @@ def etapa_ablacion(p) -> dict:
               f"IC95 [{c['IC95_delta'][0]:+.2f},{c['IC95_delta'][1]:+.2f}] "
               f"p={c['p_valor_bootstrap']:.4f} sig={c['significativo_95']}")
 
+    # Mismo contraste remuestreando declaraciones completas (ver
+    # `_bootstrap_declaraciones`): es el que corresponde al muestreo de embarques.
+    por_dam =_bootstrap_declaraciones(
+        y_test, {"completo": preds_completo, **{k: preds_por_config[k] for k in comparaciones}},
+        dp.id_declaracion(p.test), ref="completo",
+    )
+    for etiqueta in comparaciones:
+        comparaciones[etiqueta]["por_declaracion"] = por_dam[etiqueta]
+        c = por_dam[etiqueta]
+        print(f"  [DAM] vs completo: {etiqueta:<32} IC95 "
+              f"[{c['IC95_delta'][0]:+.2f},{c['IC95_delta'][1]:+.2f}] sig={c['significativo_95']}")
+
     res = {
         "semillas": semillas,
         "tabla": filas,
         "mape_modelo_completo": completo["MAPE_%"],
+        "n_declaraciones_test": por_dam["_n_declaraciones"],
         "comparaciones_pareadas_vs_completo": comparaciones,
         "sensibilidad_a_la_semilla": {
             "mape_semilla_42_artifact_desplegado": completo["MAPE_semilla_42"],
@@ -668,6 +724,7 @@ def etapa_modelos(p) -> dict:
     }
 
     ref = "XGBoost (perdida MAE)"
+    por_dam = _bootstrap_declaraciones(yte, preds, dp.id_declaracion(p.test), ref=ref)
     filas = []
     for nombre, yhat in preds.items():
         m = evaluar(yte, yhat)
@@ -696,6 +753,7 @@ def etapa_modelos(p) -> dict:
             # es peor que XGBoost.
             fila["p_valor_bootstrap"] = round(float(np.mean(d <= 0)), 4)
             fila["significativo_95"] = bool(np.percentile(d, 2.5) > 0)
+        fila["por_declaracion"] = por_dam[nombre]
         filas.append(fila)
 
     filas.sort(key=lambda f: f["MAPE_%"])
@@ -708,10 +766,17 @@ def etapa_modelos(p) -> dict:
         print(f"  {f['modelo']:<30} MAPE {f['MAPE_%']:6.2f}% "
               f"IC95 [{f['IC95_MAPE'][0]:.2f}, {f['IC95_MAPE'][1]:.2f}]{extra}")
 
+    for f in filas:
+        if "IC95_delta" in f["por_declaracion"]:
+            c = f["por_declaracion"]
+            print(f"  [DAM] {f['modelo']:<30} IC95 MAPE {c['IC95_MAPE']} | delta "
+                  f"[{c['IC95_delta'][0]:+.2f},{c['IC95_delta'][1]:+.2f}] sig={c['significativo_95']}")
+
     res = {
         "n_bootstrap": N_BOOTSTRAP,
         "semillas": semillas,
         "referencia": ref,
+        "n_declaraciones_test": por_dam["_n_declaraciones"],
         "tabla": filas,
         "nota": (
             "Cada modelo estocastico se entrena con 5 semillas y la prueba se "
@@ -894,6 +959,11 @@ def etapa_walkforward(p) -> dict:
         filas.append({
             "mes": str(mes), "anio": int(mes.year), "trimestre": f"{mes.year}-T{mes.quarter}",
             "n": int(len(pf.test)),
+            # Filas del mes en el alcance, antes de que los umbrales de exclusion
+            # del pliegue las filtren. En un desplome, la cabeza del pliegue
+            # pertenece al mercado alto y la mayoria de las filas del mes cae bajo
+            # el P0.5: el MAPE del mes solo describe las que sobreviven.
+            "n_alcance": int((scope_pliegue["FECHA"] >= inicio).sum()),
             "n_entrenamiento": int(len(pf.train) + len(pf.val)),
             "MAPE_%": round(_mape(y, yhat), 2),
             "MAE": round(float(mean_absolute_error(y, yhat)), 4),
@@ -912,6 +982,8 @@ def etapa_walkforward(p) -> dict:
                 "n": int(x["n"].sum()),
                 "MAPE_%": round(float(np.average(x["MAPE_%"], weights=x["n"])), 2),
                 "meses": int(len(x)),
+                "n_alcance": int(x["n_alcance"].sum()),
+                "pct_excluido": round(100 * (1 - x["n"].sum() / x["n_alcance"].sum()), 1),
             }
         return salida
 

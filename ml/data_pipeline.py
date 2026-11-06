@@ -654,6 +654,22 @@ def aplicar_encoders(d: pd.DataFrame, p: Particiones) -> pd.DataFrame:
     return d
 
 
+def id_declaracion(d: pd.DataFrame) -> np.ndarray:
+    """Clave de la DAM a la que pertenece cada fila: aduana + anio + correlativo.
+
+    Cada fila del corpus es una SERIE (item) de una declaracion, no una
+    declaracion: una DAM agrupa ~13 series y, como el flete se declara
+    prorrateado por peso, casi todas las de una misma DAM comparten el flete
+    unitario. Los bootstrap que pretendan medir la incertidumbre del muestreo de
+    embarques deben remuestrear esta clave, no filas sueltas.
+    """
+    return (
+        d["CADUANA"].astype(str).str.strip() + "-"
+        + d["FECHA"].dt.year.astype(str) + "-"
+        + d["NUME_CORRE"].astype(str).str.strip()
+    ).to_numpy()
+
+
 def catalogos_dropdown(p: Particiones) -> tuple[list[str], list[str]]:
     """Catalogos del formulario, curados SOBRE TRAIN.
 
